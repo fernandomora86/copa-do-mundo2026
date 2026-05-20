@@ -1,0 +1,1585 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Copa 2026">
+<meta name="theme-color" content="#111318">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Copa do Mundo 2026</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #111318;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 10px;
+  padding-top: env(safe-area-inset-top, 10px);
+  padding-bottom: env(safe-area-inset-bottom, 10px);
+  color: white;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: #161820;
+  border-radius: 12px;
+  padding: 16px;
+  transition: max-width 0.3s ease;
+}
+
+.container.bracket-mode {
+  max-width: 96vw;
+}
+
+@media (min-width: 768px) {
+  .container { max-width: 92vw; }
+  .container.bracket-mode { max-width: 96vw; border-radius: 12px; padding: 20px; }
+
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .group { margin-bottom: 0; padding: 6px; }
+  .group-title { font-size: 10px; margin-bottom: 6px; }
+  .groups-grid .ko-match { padding: 4px 6px; margin-bottom: 4px; }
+  .groups-grid .ko-row { gap: 4px; margin-bottom: 3px; }
+  .groups-grid .ko-team { padding: 3px 6px; font-size: 10px; }
+  .groups-grid .score-display { font-size: 13px; min-width: 13px; }
+  .groups-grid .score-ctrl { padding: 2px 3px; gap: 1px; }
+  .groups-grid .score-btn { width: 15px; height: 11px; font-size: 6px; }
+  .groups-grid .standings { font-size: 9px; }
+  .groups-grid .standing-row { padding: 2px 6px; }
+
+  .ko-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  #section-r32 .ko-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+h1 { text-align:center; font-size:18px; color:white; margin-bottom:14px; letter-spacing:1px; }
+
+.nav { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+.nav-row1 { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.nav-row2 { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+
+.nav-btn {
+  padding: 7px 2px;
+  border: 1px solid #2e3040;
+  border-radius: 6px;
+  background: #1a1c22;
+  color: #7a7060;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-btn.active { background:#c9a227; color:#111318; border-color:#c9a227; }
+.nav-btn:disabled { border-color:#111; color:#2a2820; cursor:not-allowed; }
+
+.nav-btn-special {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
+  height: 44px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.nav-special-icon  { font-size: 17px; line-height: 1; }
+.nav-special-label { font-size: 9px; font-weight: bold; letter-spacing: 0.8px; line-height: 1; }
+
+.phase-header {
+  text-align:center; font-size:12px; font-weight:bold;
+  padding:7px; background:#c9a227; border-radius:6px; margin-bottom:6px;
+  letter-spacing:1px; color:#111318;
+}
+
+.group {
+  margin-bottom:18px;
+  border:1px solid #2e3040;
+  border-radius:8px;
+  padding:12px;
+  background:#1a1c22;
+}
+.group-title { color:#c9a227; font-size:12px; font-weight:bold; margin-bottom:10px; letter-spacing:1px; }
+
+.ko-match {
+  border:1px solid #2e3040;
+  border-radius:7px;
+  padding:10px;
+  margin-bottom:9px;
+  background:#1a1c22;
+}
+.ko-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.ko-row:last-of-type { margin-bottom:0; }
+.ko-team {
+  flex:1; padding:8px 10px;
+  background:#22242c; border-radius:4px;
+  font-size:12px; font-weight:bold; color:#e8e0cc;
+}
+.ko-team.winner { background:#22242c; color:#e8e0cc; border:1px solid #22c55e; }
+
+.score-ctrl {
+  display:flex; align-items:center; gap:2px;
+  background:#22242c; border-radius:6px; padding:3px 4px;
+}
+.score-display { font-size:18px; font-weight:bold; color:white; min-width:18px; text-align:center; }
+.score-display.unplayed { font-size:13px; color:white; font-weight:normal; }
+.score-arrows { display:flex; flex-direction:column; gap:2px; }
+.score-btn {
+  width:18px; height:14px; border:1px solid #3a3830; border-radius:3px;
+  background:transparent; color:white; font-size:9px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.score-btn:active { border-color:#c9a227; color:#c9a227; }
+
+.standings { font-size:11px; margin-top:8px; border-radius:4px; overflow:hidden; }
+.standing-row {
+  display:flex; justify-content:space-between;
+  padding:4px 8px; color:#7a7060;
+  border-bottom:1px solid #161820; background:#161820;
+}
+.standing-row.qualified { background:#161820; color:#e8e0cc; font-weight:bold; border-left:2px solid #22c55e; }
+.standing-row.third-best { background:#161820; color:#e8e0cc; font-weight:bold; border-left:2px solid #c9a227; }
+
+
+.date-center {
+  text-align:center;
+  font-size:9px; font-weight:bold; letter-spacing:1px;
+  color:#7a7060;
+  padding-bottom:6px; margin-bottom:6px;
+  border-bottom:1px solid #2e3040;
+}
+
+.btn-reset {
+  display:block; margin:12px auto 0;
+  width:38px; height:38px;
+  background:#1a1c22; color:#4a4540;
+  border:1px solid #2e3040; border-radius:50%;
+  font-size:16px; cursor:pointer;
+  line-height:1;
+}
+.btn-reset:hover { color:#e53e3e; border-color:#e53e3e; }
+
+.btn-simulate {
+  display:block; margin:8px auto 0;
+  width:auto; padding:0 14px;
+  height:38px; border-radius:19px;
+  background:#c9a227; color:#111318;
+  border:none; font-size:11px; font-weight:bold;
+  letter-spacing:0.5px; cursor:pointer;
+}
+.btn-simulate:hover { background:#a07a1a; }
+
+.sim-bar {
+  display:flex; align-items:center; justify-content:center;
+  gap:10px; margin-bottom:10px;
+}
+.sim-toggle-wrap {
+  display:flex; align-items:center; gap:7px; cursor:pointer;
+  background:#1a1c22; border:1px solid #2e3040;
+  border-radius:20px; padding:5px 12px;
+  transition: border-color 0.2s;
+}
+.sim-toggle-wrap.active { border-color:#c9a227; }
+.sim-toggle-wrap input { display:none; }
+.sim-slider {
+  width:34px; height:18px; background:#2e3040; border-radius:9px;
+  position:relative; transition:background 0.25s; flex-shrink:0;
+}
+.sim-slider::before {
+  content:''; position:absolute;
+  width:14px; height:14px; background:#7a7060; border-radius:50%;
+  top:2px; left:2px; transition:transform 0.25s, background 0.25s;
+}
+.sim-toggle-wrap.active .sim-slider { background:#c9a22740; }
+.sim-toggle-wrap.active .sim-slider::before { transform:translateX(16px); background:#c9a227; }
+.sim-label {
+  font-size:9px; font-weight:bold; letter-spacing:1px; color:#7a7060;
+  transition:color 0.2s;
+}
+.sim-toggle-wrap.active .sim-label { color:#c9a227; }
+
+.score-display.simulated { color:#c9a22799; }
+.score-display.locked    { color:white; }
+.lock-icon { font-size:7px; color:#c9a227; margin-left:1px; line-height:1; }
+
+.champion-box {
+  text-align:center; padding:40px 20px;
+  background:linear-gradient(135deg,#1a1200,#2a2000);
+  border:2px solid #c9a227; border-radius:12px; margin-top:16px;
+}
+
+.section { display:none; }
+.section.active { display:block; }
+
+/* ===== BRACKET ===== */
+.bracket-header { text-align:center; margin-bottom:8px; }
+.bracket-header h2 { font-size:13px; font-weight:900; letter-spacing:2px; color:white; }
+
+.bracket-wrap {
+  padding-bottom:10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bracket-phases {
+  display:flex; gap:4px; margin-bottom:4px;
+  min-width: max-content; width: 100%;
+}
+.b-phase-label {
+  flex:1; min-width:66px; text-align:center; font-size:6px; font-weight:bold;
+  letter-spacing:0.5px; background:#c9a227; color:#111318;
+  padding:2px 4px; border-radius:6px;
+}
+.b-phase-label.final-lbl { min-width:80px; background:#c9a227; color:#111318; }
+
+.bracket {
+  display:flex; align-items:stretch;
+  width:100%; min-width:max-content; gap:4px;
+  padding:6px 0; position:relative;
+  overflow:visible;
+  min-height: 560px;
+}
+
+.b-col {
+  flex:1; min-width:66px; display:flex; flex-direction:column;
+  justify-content:space-around; gap:4px;
+}
+.b-col-final {
+  flex:1.2; min-width:80px; display:flex; flex-direction:column;
+  justify-content:center; align-items:center; gap:4px;
+  padding-top: 10px;
+}
+.b-trophy-top {
+  margin-top: -30px;
+}
+
+.b-badge { display:none; }
+
+.b-match {
+  display:flex; flex-direction:column; gap:1px; position:relative;
+  border:1px solid #2e3040; border-radius:3px; padding:2px;
+  background:#111318;
+}
+
+.b-team {
+  padding:3px 4px; font-size:7px;
+  border-radius:2px; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+  background:#1a1c22; color:#7a7060;
+  border-left:2px solid #2e3040;
+  line-height:1.3;
+  min-width:0;
+}
+.b-team.winner { background:#1a1c22; color:#e8e0cc; border-left-color:#22c55e; font-weight:bold; }
+.b-team.tbd { background:#0e0f12; color:#2a2820; border-left-color:#1a1c22; font-size:6px; }
+
+.b-final-box {
+  display:flex; flex-direction:column; gap:2px; width:100%;
+  border:1px solid #c9a227; border-radius:5px; padding:5px;
+  background:#111318;
+}
+.b-final-team {
+  padding:3px 4px; font-size:7px; border-radius:2px;
+  text-align:center; background:#1a1c22; color:#7a7060;
+  border:1px solid #2e3040; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.b-final-team.winner { background:#1a1c22; color:#e8e0cc; border-color:#c9a227; font-weight:bold; }
+.b-final-team.tbd { background:#0e0f12; color:#2a2820; border-color:#1a1c22; }
+
+.b-trophy { font-size:20px; text-align:center; }
+
+.b-trophy-top {
+  position: relative;
+  text-align: center; line-height:1;
+  margin-bottom: -6px;
+  z-index: 1;
+}
+.b-trophy-top img {
+  width: 54px; height: auto;
+  display: block; margin: 0 auto;
+  mix-blend-mode: screen;
+}
+.b-trophy-top.glowing img {
+  animation: trophy-glow 1.6s ease-in-out infinite alternate;
+}
+.b-trophy-top.glowing::before {
+  content: '';
+  position: absolute;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #c9a22755 0%, transparent 70%);
+  left: 50%; top: 50%;
+  margin-left: -40px; margin-top: -40px;
+  animation: glow-pulse 1.6s ease-in-out infinite alternate;
+  z-index: -1;
+}
+@keyframes trophy-glow {
+  from { filter: drop-shadow(0 0 4px #c9a227aa); }
+  to   { filter: drop-shadow(0 0 14px #c9a227) drop-shadow(0 0 28px #c9a22766); }
+}
+@keyframes glow-pulse {
+  from { transform: scale(0.7); opacity: 0.3; }
+  to   { transform: scale(1.4); opacity: 1; }
+}
+.b-champ-flag {
+  font-size:54px; text-align:center; line-height:1; margin-top:4px;
+  animation: flag-pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes flag-pop {
+  from { transform:scale(0); opacity:0; }
+  to   { transform:scale(1); opacity:1; }
+}
+.b-champ-name {
+  font-size:8px; color:#c9a227; font-weight:bold;
+  text-align:center; letter-spacing:0.5px; margin-top:2px;
+}
+
+.bracket-svg {
+  position:absolute; top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
+}
+
+/* ===== CLASSIFICAÇÃO ===== */
+.class-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+@media (min-width: 768px) {
+  .class-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+}
+.class-group { border:1px solid #2e3040; border-radius:6px; padding:5px 4px; background:#1a1c22; }
+.class-group-title { color:#c9a227; font-size:9px; font-weight:bold; margin-bottom:4px; letter-spacing:0.5px; text-align:center; }
+.class-row {
+  display:flex; align-items:center; gap:2px;
+  padding:2px 3px; font-size:8.5px; color:#7a7060;
+  border-bottom:1px solid #161820; background:#161820;
+}
+.class-row.qualified { color:#e8e0cc; font-weight:bold; border-left:2px solid #22c55e; }
+.class-row.third-best { color:#e8e0cc; font-weight:bold; border-left:2px solid #c9a227; }
+.class-pos { min-width:8px; color:#556; font-size:8px; }
+.class-flag { font-size:11px; line-height:1; }
+.class-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:8px; }
+.class-col-headers {
+  display:flex; align-items:center; gap:2px;
+  padding:0 3px 2px; margin-bottom:2px;
+  border-bottom:1px solid #2e3040;
+}
+.class-h-name { flex:1; }
+.class-h-stat { font-size:7px; color:#445; font-weight:bold; width:20px; text-align:right; letter-spacing:0.3px; flex-shrink:0; }
+.class-pts { font-size:8.5px; font-weight:bold; width:20px; text-align:right; flex-shrink:0; }
+.class-gd  { font-size:8px; color:#6a6050; width:20px; text-align:right; flex-shrink:0; }
+.class-gp  { font-size:8px; color:#889; width:20px; text-align:right; flex-shrink:0; }
+
+/* ===== CALENDÁRIO ===== */
+.cal-strip-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+}
+.cal-strip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 2px;
+  min-width: max-content;
+}
+.cal-chip {
+  padding: 7px 10px;
+  border: 1px solid #2e3040;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #7a7060;
+  cursor: pointer;
+  background: #1a1c22;
+  white-space: nowrap;
+  min-width: 38px;
+  text-align: center;
+  line-height: 1.2;
+}
+.cal-chip.active { background: #c9a227; color: #111318; border-color: #c9a227; }
+.cal-month-sep {
+  font-size: 8px;
+  font-weight: bold;
+  color: #c9a227;
+  letter-spacing: 1px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+#countdown {
+  text-align:center; margin-bottom:12px;
+  background:linear-gradient(135deg,#1a1c22,#22242c);
+  border:1px solid #2e3040; border-radius:8px;
+  padding:8px 10px;
+}
+#countdown .cdw-label {
+  font-size:9px; color:#7a7060; letter-spacing:1.5px;
+  font-weight:bold; margin-bottom:6px;
+}
+#countdown .cdw-units {
+  display:flex; justify-content:center; gap:8px;
+}
+#countdown .cdw-unit {
+  display:flex; flex-direction:column; align-items:center; gap:1px;
+  min-width:36px;
+}
+#countdown .cdw-num {
+  font-size:22px; font-weight:900; color:#c9a227;
+  line-height:1; letter-spacing:-1px;
+}
+#countdown .cdw-tag {
+  font-size:8px; color:#7a7060; letter-spacing:1px; font-weight:bold;
+}
+#countdown .cdw-sep {
+  font-size:20px; font-weight:900; color:#2e3040;
+  align-self:center; margin-bottom:6px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚽ COPA DO MUNDO 2026</h1>
+  <div id="countdown">
+    <div class="cdw-label">FALTAM PARA O INÍCIO</div>
+    <div class="cdw-units">
+      <div class="cdw-unit"><span class="cdw-num" id="cdw-d">--</span><span class="cdw-tag">DIAS</span></div>
+      <div class="cdw-sep">:</div>
+      <div class="cdw-unit"><span class="cdw-num" id="cdw-h">--</span><span class="cdw-tag">HORAS</span></div>
+      <div class="cdw-sep">:</div>
+      <div class="cdw-unit"><span class="cdw-num" id="cdw-m">--</span><span class="cdw-tag">MIN</span></div>
+      <div class="cdw-sep">:</div>
+      <div class="cdw-unit"><span class="cdw-num" id="cdw-s">--</span><span class="cdw-tag">SEG</span></div>
+    </div>
+  </div>
+  <nav class="nav" id="nav"></nav>
+  <div id="section-groups"  class="section active"></div>
+  <div id="section-r32"     class="section"></div>
+  <div id="section-r16"     class="section"></div>
+  <div id="section-qf"      class="section"></div>
+  <div id="section-sf"      class="section"></div>
+  <div id="section-final"   class="section"></div>
+  <div id="section-champ"   class="section"></div>
+  <div id="section-bracket"  class="section"></div>
+  <div id="section-calendar" class="section"></div>
+  <div id="section-class"    class="section"></div>
+  <div class="sim-bar">
+    <label class="sim-toggle-wrap" id="sim-wrap" onclick="toggleSimMode()">
+      <div class="sim-slider"></div>
+      <span class="sim-label">⚡ MODO SIMULAÇÃO</span>
+    </label>
+  </div>
+  <button class="btn-reset" onclick="if(confirm('Resetar toda a simulação?')){localStorage.removeItem('copa2026_scores');localStorage.removeItem('copa2026_played');location.reload();}">🔄</button>
+</div>
+
+<script>
+const FLAGS = {
+  'Alemanha':'🇩🇪','Argentina':'🇦🇷','Áustria':'🇦🇹','Austrália':'🇦🇺',
+  'Bélgica':'🇧🇪','Bósnia e Herzegovina':'🇧🇦','Brasil':'🇧🇷',
+  'Cabo Verde':'🇨🇻','Canadá':'🇨🇦','Catar':'🇶🇦','Colômbia':'🇨🇴',
+  'Coreia do Sul':'🇰🇷','Costa do Marfim':'🇨🇮','Croácia':'🇭🇷',
+  'Curaçau':'🇨🇼','Egito':'🇪🇬','Equador':'🇪🇨','Escócia':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Espanha':'🇪🇸','Estados Unidos':'🇺🇸','França':'🇫🇷',
+  'Gana':'🇬🇭','Haiti':'🇭🇹','Holanda':'🇳🇱','Inglaterra':'🇬🇧',
+  'Irã':'🇮🇷','Iraque':'🇮🇶','Japão':'🇯🇵','Jordânia':'🇯🇴',
+  'Marrocos':'🇲🇦','México':'🇲🇽','Noruega':'🇳🇴','Nova Zelândia':'🇳🇿',
+  'Panamá':'🇵🇦','Paraguai':'🇵🇾','Portugal':'🇵🇹',
+  'República Tcheca':'🇨🇿','República Democrática do Congo':'🇨🇩',
+  'Arábia Saudita':'🇸🇦','Senegal':'🇸🇳','Sérvia':'🇷🇸',
+  'Suécia':'🇸🇪','Suíça':'🇨🇭','Tunísia':'🇹🇳','Turquia':'🇹🇷',
+  'Uruguai':'🇺🇾','Uzbequistão':'🇺🇿','África do Sul':'🇿🇦','Argélia':'🇩🇿',
+};
+function flag(t){ return FLAGS[t]||'⚽'; }
+
+const GROUPS = {
+  'A':['México','Coreia do Sul','África do Sul','República Tcheca'],
+  'B':['Canadá','Suíça','Catar','Bósnia e Herzegovina'],
+  'C':['Brasil','Marrocos','Escócia','Haiti'],
+  'D':['Estados Unidos','Austrália','Paraguai','Turquia'],
+  'E':['Alemanha','Equador','Costa do Marfim','Curaçau'],
+  'F':['Holanda','Japão','Tunísia','Suécia'],
+  'G':['Bélgica','Irã','Egito','Nova Zelândia'],
+  'H':['Espanha','Uruguai','Arábia Saudita','Cabo Verde'],
+  'I':['França','Senegal','Noruega','Iraque'],
+  'J':['Argentina','Áustria','Argélia','Jordânia'],
+  'K':['Portugal','Colômbia','Uzbequistão','República Democrática do Congo'],
+  'L':['Inglaterra','Croácia','Panamá','Gana'],
+};
+
+// Copa 2026 official R32 bracket structure
+// Left side M0-M7, Right side M8-M15
+// 3rd-place slots: conditional on which groups' 3rds qualify
+const KO_LABELS = {
+  r32: [
+    ['1ºE', '3º★'],  // M0:  1E vs 3rd[A/B/C/D/F]
+    ['1ºI', '3º★'],  // M1:  1I vs 3rd[C/D/F/G/H]
+    ['2ºA', '2ºB'],  // M2:  2A vs 2B
+    ['1ºF', '2ºC'],  // M3:  1F vs 2C
+    ['2ºK', '2ºL'],  // M4:  2K vs 2L
+    ['1ºH', '2ºJ'],  // M5:  1H vs 2J
+    ['1ºD', '3º★'],  // M6:  1D vs 3rd[B/E/F/I/J]
+    ['1ºG', '3º★'],  // M7:  1G vs 3rd[A/E/H/I/J]
+    ['1ºC', '2ºF'],  // M8:  1C vs 2F
+    ['2ºE', '2ºI'],  // M9:  2E vs 2I
+    ['1ºA', '3º★'],  // M10: 1A vs 3rd[C/E/F/H/I]
+    ['1ºL', '3º★'],  // M11: 1L vs 3rd[E/H/I/J/K]
+    ['1ºJ', '2ºH'],  // M12: 1J vs 2H
+    ['2ºD', '2ºG'],  // M13: 2D vs 2G
+    ['1ºB', '3º★'],  // M14: 1B vs 3rd[E/F/G/I/J]
+    ['1ºK', '3º★'],  // M15: 1K vs 3rd[D/E/I/J/L]
+  ],
+  r16: [
+    ['V.16-1','V.16-2'],['V.16-3','V.16-4'],
+    ['V.16-5','V.16-6'],['V.16-7','V.16-8'],
+    ['V.16-9','V.16-10'],['V.16-11','V.16-12'],
+    ['V.16-13','V.16-14'],['V.16-15','V.16-16'],
+  ],
+  qf: [
+    ['V.Oit.1','V.Oit.2'],['V.Oit.3','V.Oit.4'],
+    ['V.Oit.5','V.Oit.6'],['V.Oit.7','V.Oit.8'],
+  ],
+  sf: [
+    ['V.Qrt.1','V.Qrt.2'],['V.Qrt.3','V.Qrt.4'],
+  ],
+  final: [['V.Semi 1','V.Semi 2']],
+};
+
+const state = {
+  groupScores:{}, groupStats:{},
+  koScores:{},
+  qualified:[],
+  thirdPlace:[],
+  thirdPlaceAssigned:{},
+  r32winners:[], r16winners:[], qfwinners:[], sfwinners:[], champion:null,
+};
+
+for(const[g,teams]of Object.entries(GROUPS)){
+  state.groupStats[g]={};
+  teams.forEach(t=>state.groupStats[g][t]={pts:0,gf:0,ga:0});
+}
+
+function genMatches(teams){
+  const m=[];
+  for(let i=0;i<teams.length;i++)
+    for(let j=i+1;j<teams.length;j++) m.push([teams[i],teams[j]]);
+  return m;
+}
+
+function standings(g){
+  return Object.entries(state.groupStats[g])
+    .map(([name,s])=>({name,...s,diff:s.gf-s.ga}))
+    .sort((a,b)=>b.pts-a.pts||b.diff-a.diff||b.gf-a.gf);
+}
+
+const tempScores={};
+const playedMatches=new Set();
+function getScore(id,slot){
+  const key=`${id}-${slot}`;
+  if(!(key in tempScores)){
+    const saved=/^(r32|r16|qf|sf|final)/.test(id)?state.koScores[id]:state.groupScores[id];
+    tempScores[key]=saved?(slot===1?saved.s1:saved.s2):0;
+  }
+  return tempScores[key];
+}
+
+
+// ── SIMULATION MODE ──────────────────────────────────────────────────────────
+let simMode = false;
+const lockedMatches = new Set(); // manually edited by user in sim mode
+
+function toggleSimMode(){
+  simMode = !simMode;
+  const wrap = document.getElementById('sim-wrap');
+  if(wrap) wrap.classList.toggle('active', simMode);
+  if(simMode){
+    runFullSimulation();
+  } else {
+    // Desativa: limpa visual de simulado mas mantém placares
+    document.querySelectorAll('.score-display.simulated').forEach(el=>{
+      el.classList.remove('simulated');
+    });
+    document.querySelectorAll('.lock-icon').forEach(el=>el.remove());
+  }
+}
+
+function runFullSimulation(){
+  // Grupos: simula apenas não-travados
+  for(const [g,teams] of Object.entries(GROUPS)){
+    genMatches(teams).forEach(([t1,t2],i)=>{
+      const id=`${g}-${i}`;
+      if(lockedMatches.has(id)) return;
+      const [s1,s2]=simularPartida(t1,t2);
+      applySimScore(id,s1,s2);
+    });
+    updateGroupStandings(g);
+  }
+  refreshQualified();
+  simKOCascade();
+}
+
+function simKOCascade(){
+  // Cada getPairs() é chamado APÓS simular a fase anterior
+  const phases = [
+    {getPairs:getR32pairs, prefix:'r32'},
+    {getPairs:getR16pairs, prefix:'r16'},
+    {getPairs:getQFpairs,  prefix:'qf'},
+    {getPairs:getSFpairs,  prefix:'sf'},
+  ];
+  phases.forEach(({getPairs,prefix})=>{
+    getPairs().forEach(([t1,t2],i)=>{
+      const id=`${prefix}-${i}`;
+      if(!t1||!t2||lockedMatches.has(id)) return;
+      const [s1,s2]=simularPartida(t1,t2,true);
+      applySimScore(id,s1,s2);
+    });
+    autoRefreshKO();
+  });
+  // Final
+  const fp=getFinalPair()[0];
+  const fid='final-0';
+  if(fp[0]&&fp[1]&&!lockedMatches.has(fid)){
+    const [s1,s2]=simularPartida(fp[0],fp[1],true);
+    applySimScore(fid,s1,s2);
+  }
+  autoRefreshKO();
+  saveState();
+}
+
+function applySimScore(id,s1,s2){
+  playedMatches.add(id);
+  tempScores[`${id}-1`]=s1;
+  tempScores[`${id}-2`]=s2;
+  // Atualiza displays com classe "simulated"
+  [1,2].forEach(slot=>{
+    document.querySelectorAll(`[data-score-id="${id}-${slot}"]`).forEach(el=>{
+      el.textContent = slot===1?s1:s2;
+      el.classList.remove('unplayed','locked');
+      if(!lockedMatches.has(id)) el.classList.add('simulated');
+    });
+  });
+}
+
+function markLocked(id){
+  lockedMatches.add(id);
+  [1,2].forEach(slot=>{
+    document.querySelectorAll(`[data-score-id="${id}-${slot}"]`).forEach(el=>{
+      el.classList.remove('simulated');
+      el.classList.add('locked');
+    });
+  });
+}
+
+// ── ELO RATINGS (base 2024/2025) ──────────────────────────────────────────
+const ELO = {
+  'Argentina':2149,'Brasil':2096,'França':2081,'Espanha':2073,
+  'Inglaterra':2043,'Alemanha':1979,'Holanda':1973,'Portugal':1990,
+  'Croácia':1946,'Noruega':1846,'Japão':1836,'Marrocos':1867,
+  'Estados Unidos':1829,'Senegal':1830,'Colômbia':1877,'Uruguai':1880,
+  'Suíça':1876,'Bélgica':1912,'México':1853,'Sérvia':1813,
+  'Turquia':1792,'Áustria':1806,'Escócia':1768,'Suécia':1764,
+  'Coreia do Sul':1815,'Equador':1782,'República Tcheca':1757,
+  'Austrália':1735,'Canadá':1738,'Bósnia e Herzegovina':1732,
+  'Irã':1718,'Costa do Marfim':1705,'Argélia':1705,'Tunísia':1691,
+  'Egito':1668,'Gana':1688,'África do Sul':1666,'Arábia Saudita':1665,
+  'Paraguai':1660,'Iraque':1658,'República Democrática do Congo':1655,
+  'Cabo Verde':1634,'Panamá':1638,'Uzbequistão':1638,'Jordânia':1625,
+  'Catar':1610,'Curaçau':1595,'Nova Zelândia':1601,'Haiti':1572,
+};
+const ELO_DEFAULT = 1650;
+
+function poisson(lambda){
+  const L=Math.exp(-Math.max(0.1,lambda));
+  let k=0,p=1;
+  do{k++;p*=Math.random();}while(p>L);
+  return k-1;
+}
+
+function simularPartida(t1, t2, koMode=false){
+  const e1=ELO[t1]||ELO_DEFAULT, e2=ELO[t2]||ELO_DEFAULT;
+  const diff=(e1-e2)/400;
+  const base=1.25;
+  const lambda1=Math.max(0.15, base*(1+diff*0.6));
+  const lambda2=Math.max(0.15, base*(1-diff*0.6));
+  let s1=poisson(lambda1), s2=poisson(lambda2);
+  // Em KO não pode ter empate — re-simula desempate (pênaltis/prorrogação)
+  if(koMode && s1===s2){
+    const p=1/(1+Math.pow(10,(e2-e1)/400));
+    if(Math.random()<p) s1++; else s2++;
+  }
+  return [s1,s2];
+}
+
+function setScore(id, s1, s2){
+  playedMatches.add(id);
+  tempScores[`${id}-1`]=s1;
+  tempScores[`${id}-2`]=s2;
+}
+
+
+function saveState(){
+  try{
+    localStorage.setItem('copa2026_scores', JSON.stringify(tempScores));
+    localStorage.setItem('copa2026_played', JSON.stringify([...playedMatches]));
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem('copa2026_scores');
+    if(raw) Object.assign(tempScores, JSON.parse(raw));
+    const played=localStorage.getItem('copa2026_played');
+    if(played) JSON.parse(played).forEach(id=>playedMatches.add(id));
+  }catch(e){}
+}
+
+function changeScore(id,slot,delta){
+  const wasPlayed=playedMatches.has(id);
+  playedMatches.add(id);
+
+  if(!wasPlayed){
+    // Primeiro toque: revela 0-0, não incrementa ainda
+    [1,2].forEach(s=>{
+      document.querySelectorAll(`[data-score-id="${id}-${s}"]`).forEach(el=>{
+        el.textContent=0;
+        el.classList.remove('unplayed');
+      });
+    });
+  } else {
+    // Cliques seguintes: aplica o delta normalmente
+    const key=`${id}-${slot}`;
+    tempScores[key]=Math.max(0,getScore(id,slot)+delta);
+    document.querySelectorAll(`[data-score-id="${id}-${slot}"]`).forEach(el=>{
+      el.textContent=tempScores[key];
+    });
+  }
+
+  const g=id.split('-')[0];
+  if(GROUPS[g]) updateGroupStandings(g);
+  else autoRefreshKO();
+
+  // Modo simulação: trava o jogo editado e re-simula cascata
+  if(simMode){
+    markLocked(id);
+    if(GROUPS[g]){ refreshQualified(); }
+    simKOCascade();
+  }
+
+  saveState();
+}
+
+function standingsHtml(g){
+  return standings(g).map((row,i)=>{
+    const cls=i<2?'qualified':i===2?'third-best':'';
+    return `<div class="standing-row ${cls}">
+      <span>${i+1}. ${flag(row.name)} ${row.name}</span>
+      <span>${row.pts}pts</span>
+    </div>`;
+  }).join('');
+}
+
+function renderGroupStandings(g){
+  const html=standingsHtml(g);
+  const el=document.getElementById(`standings-${g}`);
+  if(el) el.innerHTML=html;
+  document.querySelectorAll(`[data-cal-standings="${g}"]`).forEach(el=>el.innerHTML=html);
+}
+
+function updateGroupStandings(g){
+  const stats={};
+  GROUPS[g].forEach(t=>stats[t]={pts:0,gf:0,ga:0});
+  genMatches(GROUPS[g]).forEach((m,i)=>{
+    const id=`${g}-${i}`;
+    if(!playedMatches.has(id)) return;
+    const s1=getScore(id,1), s2=getScore(id,2);
+    stats[m[0]].gf+=s1; stats[m[0]].ga+=s2;
+    stats[m[1]].gf+=s2; stats[m[1]].ga+=s1;
+    if(s1>s2)       stats[m[0]].pts+=3;
+    else if(s2>s1)  stats[m[1]].pts+=3;
+    else            {stats[m[0]].pts+=1;stats[m[1]].pts+=1;}
+  });
+  GROUPS[g].forEach(t=>state.groupStats[g][t]=stats[t]);
+  renderGroupStandings(g);
+  refreshQualified();
+}
+
+function refreshQualified(){
+  state.qualified=[];
+  for(const g of Object.keys(GROUPS))
+    standings(g).slice(0,2).forEach(r=>state.qualified.push(r.name));
+
+  // Best 8 third-place teams by pts, then gd, then gf
+  const thirds=[];
+  for(const g of Object.keys(GROUPS)){
+    const t=standings(g)[2];
+    if(t) thirds.push({name:t.name,group:g,pts:t.pts,diff:t.diff,gf:t.gf});
+  }
+  thirds.sort((a,b)=>b.pts-a.pts||b.diff-a.diff||b.gf-a.gf);
+  state.thirdPlace=thirds.slice(0,8).map(t=>t.name);
+  state.thirdPlaceAssigned=computeThirdPlaceAssigned(thirds);
+
+  // Re-render all standings so 3rd-place yellow highlights update
+  for(const g of Object.keys(GROUPS)) renderGroupStandings(g);
+
+  const activeId=document.querySelector('.nav-btn.active')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]||'section-groups';
+  renderNav(activeId);
+  const activeSection=document.querySelector('.section.active')?.id;
+  if(activeSection==='section-r32') renderR32();
+  else if(activeSection==='section-r16') renderR16();
+  else if(activeSection==='section-class') renderClass();
+  renderBracket();
+}
+
+function autoRefreshKO(){
+  const r32p=getR32pairs();
+  for(let i=0;i<16;i++){
+    const id=`r32-${i}`, s1=getScore(id,1), s2=getScore(id,2);
+    state.r32winners[i]=(r32p[i][0]&&r32p[i][1]&&s1!==s2)?(s1>s2?r32p[i][0]:r32p[i][1]):null;
+  }
+  const r16p=getR16pairs();
+  for(let i=0;i<8;i++){
+    const id=`r16-${i}`, s1=getScore(id,1), s2=getScore(id,2);
+    state.r16winners[i]=(r16p[i][0]&&r16p[i][1]&&s1!==s2)?(s1>s2?r16p[i][0]:r16p[i][1]):null;
+  }
+  const qfp=getQFpairs();
+  for(let i=0;i<4;i++){
+    const id=`qf-${i}`, s1=getScore(id,1), s2=getScore(id,2);
+    state.qfwinners[i]=(qfp[i][0]&&qfp[i][1]&&s1!==s2)?(s1>s2?qfp[i][0]:qfp[i][1]):null;
+  }
+  const sfp=getSFpairs();
+  for(let i=0;i<2;i++){
+    const id=`sf-${i}`, s1=getScore(id,1), s2=getScore(id,2);
+    state.sfwinners[i]=(sfp[i][0]&&sfp[i][1]&&s1!==s2)?(s1>s2?sfp[i][0]:sfp[i][1]):null;
+  }
+  const fp=getFinalPair()[0];
+  const fs1=getScore('final-0',1), fs2=getScore('final-0',2);
+  state.champion=(fp[0]&&fp[1]&&fs1!==fs2)?(fs1>fs2?fp[0]:fp[1]):null;
+
+  const activeId=document.querySelector('.nav-btn.active')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]||'section-groups';
+  renderNav(activeId);
+  const active=document.querySelector('.section.active')?.id;
+  const re={
+    'section-r32':renderR32,'section-r16':renderR16,
+    'section-qf':renderQF,'section-sf':renderSF,
+    'section-final':renderFinal,'section-champ':renderChampion,
+  };
+  if(re[active]) re[active]();
+  renderBracket();
+}
+
+function scoreControl(id,slot){
+  const played=playedMatches.has(id);
+  const val=played?getScore(id,slot):'-';
+  const cls=played?'':'unplayed';
+  return `<div class="score-ctrl">
+    <span class="score-display ${cls}" data-score-id="${id}-${slot}">${val}</span>
+    <div class="score-arrows">
+      <button class="score-btn" onclick="changeScore('${id}',${slot},1)">▲</button>
+      <button class="score-btn" onclick="changeScore('${id}',${slot},-1)">▼</button>
+    </div>
+  </div>`;
+}
+
+function parseDateVal(s){
+  if(!s) return Infinity;
+  const M={JUN:6,JUL:7};
+  const [datePart,timePart]=s.split(' • ');
+  const [day,month]=datePart.split(' ');
+  const [h,min]=(timePart||'00h00').split('h');
+  return M[month]*1e6+Number(day)*1e3+Number(h)*10+Number(min||0);
+}
+
+/* ---- GRUPOS ---- */
+function renderGroups(){
+  const el=document.getElementById('section-groups');
+  let html='<div class="phase-header">⚽  FASE DE GRUPOS</div><div class="groups-grid">';
+  for(const[g,teams]of Object.entries(GROUPS)){
+    html+=`<div class="group"><div class="group-title">GRUPO ${g}</div>`;
+    const sorted=genMatches(teams)
+      .map((m,i)=>({m,i,dv:parseDateVal(MATCH_DATES[`${g}-${i}`])}))
+      .sort((a,b)=>a.dv-b.dv);
+    sorted.forEach(({m,i})=>{
+      const id=`${g}-${i}`;
+      const saved=state.groupScores[id];
+      if(saved){tempScores[`${id}-1`]=saved.s1;tempScores[`${id}-2`]=saved.s2;}
+      const dt=MATCH_DATES[id]||'';
+      html+=`<div class="ko-match">
+        ${dt?`<div class="date-center">${dt}</div>`:''}
+        <div class="ko-row"><div class="ko-team">${flag(m[0])} ${m[0]}</div>${scoreControl(id,1)}</div>
+        <div class="ko-row"><div class="ko-team">${flag(m[1])} ${m[1]}</div>${scoreControl(id,2)}</div>
+      </div>`;
+    });
+    html+=`<div class="standings" id="standings-${g}"></div></div>`;
+  }
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+/* ---- MATA-MATA ---- */
+
+// Datas e horários BRT — fonte: calendário oficial FIFA 2026
+const MATCH_DATES = {
+  // Grupo A  ['México','Coreia do Sul','África do Sul','República Tcheca']
+  // A-0=Mex×Cor  A-1=Mex×Afr  A-2=Mex×Tch  A-3=Cor×Afr  A-4=Cor×Tch  A-5=Afr×Tch
+  'A-1':'11 JUN • 16h00', 'A-4':'11 JUN • 23h00',
+  'A-5':'18 JUN • 13h00', 'A-0':'18 JUN • 22h00',
+  'A-2':'24 JUN • 22h00', 'A-3':'24 JUN • 22h00',
+
+  // Grupo B  ['Canadá','Suíça','Catar','Bósnia e Herzegovina']
+  // B-0=Can×Sui  B-1=Can×Cat  B-2=Can×Bos  B-3=Sui×Cat  B-4=Sui×Bos  B-5=Cat×Bos
+  'B-2':'12 JUN • 16h00', 'B-3':'13 JUN • 16h00',
+  'B-4':'18 JUN • 16h00', 'B-1':'18 JUN • 19h00',
+  'B-0':'24 JUN • 16h00', 'B-5':'24 JUN • 16h00',
+
+  // Grupo C  ['Brasil','Marrocos','Escócia','Haiti']
+  // C-0=Bra×Mar  C-1=Bra×Esc  C-2=Bra×Hai  C-3=Mar×Esc  C-4=Mar×Hai  C-5=Esc×Hai
+  'C-0':'13 JUN • 19h00', 'C-5':'13 JUN • 22h00',
+  'C-3':'19 JUN • 19h00', 'C-2':'19 JUN • 21h30',
+  'C-1':'24 JUN • 19h00', 'C-4':'24 JUN • 19h00',
+
+  // Grupo D  ['Estados Unidos','Austrália','Paraguai','Turquia']
+  // D-0=EUA×Aus  D-1=EUA×Par  D-2=EUA×Tur  D-3=Aus×Par  D-4=Aus×Tur  D-5=Par×Tur
+  'D-1':'12 JUN • 22h00', 'D-4':'14 JUN • 01h00',
+  'D-0':'19 JUN • 16h00', 'D-5':'20 JUN • 00h00',
+  'D-2':'25 JUN • 23h00', 'D-3':'25 JUN • 23h00',
+
+  // Grupo E  ['Alemanha','Equador','Costa do Marfim','Curaçau']
+  // E-0=Ale×Equ  E-1=Ale×Cos  E-2=Ale×Cur  E-3=Equ×Cos  E-4=Equ×Cur  E-5=Cos×Cur
+  'E-2':'14 JUN • 14h00', 'E-3':'14 JUN • 20h00',
+  'E-1':'20 JUN • 17h00', 'E-4':'20 JUN • 21h00',
+  'E-5':'25 JUN • 17h00', 'E-0':'25 JUN • 17h00',
+
+  // Grupo F  ['Holanda','Japão','Tunísia','Suécia']
+  // F-0=Hol×Jap  F-1=Hol×Tun  F-2=Hol×Sue  F-3=Jap×Tun  F-4=Jap×Sue  F-5=Tun×Sue
+  'F-0':'14 JUN • 17h00', 'F-5':'14 JUN • 23h00',
+  'F-2':'20 JUN • 14h00', 'F-3':'21 JUN • 01h00',
+  'F-4':'25 JUN • 20h00', 'F-1':'25 JUN • 20h00',
+
+  // Grupo G  ['Bélgica','Irã','Egito','Nova Zelândia']
+  // G-0=Bel×Ira  G-1=Bel×Egi  G-2=Bel×NZ  G-3=Ira×Egi  G-4=Ira×NZ  G-5=Egi×NZ
+  'G-1':'15 JUN • 16h00', 'G-4':'15 JUN • 22h00',
+  'G-0':'21 JUN • 16h00', 'G-5':'21 JUN • 22h00',
+  'G-3':'27 JUN • 00h00', 'G-2':'27 JUN • 00h00',
+
+  // Grupo H  ['Espanha','Uruguai','Arábia Saudita','Cabo Verde']
+  // H-0=Esp×Uru  H-1=Esp×Ara  H-2=Esp×Cab  H-3=Uru×Ara  H-4=Uru×Cab  H-5=Ara×Cab
+  'H-2':'15 JUN • 13h00', 'H-3':'15 JUN • 19h00',
+  'H-1':'21 JUN • 13h00', 'H-4':'21 JUN • 19h00',
+  'H-0':'26 JUN • 21h00', 'H-5':'26 JUN • 21h00',
+
+  // Grupo I  ['França','Senegal','Noruega','Iraque']
+  // I-0=Fra×Sen  I-1=Fra×Nor  I-2=Fra×Ira  I-3=Sen×Nor  I-4=Sen×Ira  I-5=Nor×Ira
+  'I-0':'16 JUN • 16h00', 'I-5':'16 JUN • 19h00',
+  'I-2':'22 JUN • 18h00', 'I-3':'22 JUN • 21h00',
+  'I-1':'26 JUN • 16h00', 'I-4':'26 JUN • 16h00',
+
+  // Grupo J  ['Argentina','Áustria','Argélia','Jordânia']
+  // J-0=Arg×Aut  J-1=Arg×Alg  J-2=Arg×Jor  J-3=Aut×Alg  J-4=Aut×Jor  J-5=Alg×Jor
+  'J-1':'16 JUN • 22h00', 'J-4':'17 JUN • 01h00',
+  'J-0':'22 JUN • 14h00', 'J-5':'23 JUN • 00h00',
+  'J-3':'27 JUN • 23h00', 'J-2':'27 JUN • 23h00',
+
+  // Grupo K  ['Portugal','Colômbia','Uzbequistão','República Democrática do Congo']
+  // K-0=Por×Col  K-1=Por×Uzb  K-2=Por×RDC  K-3=Col×Uzb  K-4=Col×RDC  K-5=Uzb×RDC
+  'K-2':'17 JUN • 14h00', 'K-3':'17 JUN • 23h00',
+  'K-1':'23 JUN • 14h00', 'K-4':'23 JUN • 23h00',
+  'K-0':'27 JUN • 20h30', 'K-5':'27 JUN • 20h30',
+
+  // Grupo L  ['Inglaterra','Croácia','Panamá','Gana']
+  // L-0=Ing×Cro  L-1=Ing×Pan  L-2=Ing×Gan  L-3=Cro×Pan  L-4=Cro×Gan  L-5=Pan×Gan
+  'L-0':'17 JUN • 17h00', 'L-5':'17 JUN • 20h00',
+  'L-2':'23 JUN • 17h00', 'L-3':'23 JUN • 20h00',
+  'L-1':'27 JUN • 18h00', 'L-4':'27 JUN • 18h00',
+
+  // 16-avos de final (R32)
+  'r32-2' :'28 JUN • 16h00',
+  'r32-8' :'29 JUN • 14h00', 'r32-0' :'29 JUN • 17h30', 'r32-3' :'29 JUN • 22h00',
+  'r32-9' :'30 JUN • 14h00', 'r32-1' :'30 JUN • 18h00', 'r32-10':'30 JUN • 22h00',
+  'r32-11':'01 JUL • 13h00', 'r32-7' :'01 JUL • 17h00', 'r32-6' :'01 JUL • 21h00',
+  'r32-4' :'02 JUL • 20h00', 'r32-5' :'02 JUL • 16h00',
+  'r32-14':'03 JUL • 00h00', 'r32-13':'03 JUL • 15h00', 'r32-12':'03 JUL • 19h00', 'r32-15':'03 JUL • 22h30',
+
+  // Oitavas de final (R16)
+  'r16-1':'04 JUL • 14h00', 'r16-0':'04 JUL • 18h00',
+  'r16-4':'05 JUL • 17h00', 'r16-5':'05 JUL • 21h00',
+  'r16-2':'06 JUL • 16h00', 'r16-3':'06 JUL • 21h00',
+  'r16-6':'07 JUL • 13h00', 'r16-7':'07 JUL • 17h00',
+
+  // Quartas de final
+  'qf-0':'09 JUL • 17h00',
+  'qf-1':'10 JUL • 16h00',
+  'qf-2':'11 JUL • 18h00',
+  'qf-3':'11 JUL • 22h00',
+
+  // Semifinais
+  'sf-0':'14 JUL • 16h00',
+  'sf-1':'15 JUL • 16h00',
+
+  // Final
+  'final-0':'19 JUL • 16h00',
+};
+
+// Mapa: data → lista de match IDs
+const DATES_INDEX = (() => {
+  const idx = {};
+  for (const [id, val] of Object.entries(MATCH_DATES)) {
+    const date = val.split(' • ')[0];
+    if (!idx[date]) idx[date] = [];
+    idx[date].push(id);
+  }
+  return idx;
+})();
+
+const ALL_DATES = Object.keys(DATES_INDEX).sort((a, b) => {
+  const M = { JUN: 6, JUL: 7 };
+  const [da, ma] = a.split(' ');
+  const [db, mb] = b.split(' ');
+  return (M[ma] - M[mb]) || (Number(da) - Number(db));
+});
+
+function findBestCalDate(){
+  const MONTHS={JAN:0,FEV:1,MAR:2,ABR:3,MAI:4,JUN:5,JUL:6,AGO:7,SET:8,OUT:9,NOV:10,DEZ:11};
+  const today=new Date(); today.setHours(0,0,0,0);
+  function toDate(s){
+    const [d,m]=s.split(' ');
+    const mo=MONTHS[m];
+    return mo!==undefined?new Date(2026,mo,parseInt(d)):null;
+  }
+  // Dia exato
+  const exact=ALL_DATES.find(d=>{const dt=toDate(d);return dt&&dt.getTime()===today.getTime();});
+  if(exact) return exact;
+  // Proximo futuro
+  const next=ALL_DATES.find(d=>{const dt=toDate(d);return dt&&dt>today;});
+  if(next) return next;
+  // Tudo no passado — abre no ultimo dia
+  return ALL_DATES[ALL_DATES.length-1];
+}
+let calSelectedDate = findBestCalDate();
+
+// Copa 2026 official bracket: each 3rd-place slot has a list of eligible groups.
+// Greedy assignment: fill slots with fewest options first using the best-ranked 3rd.
+const THIRD_SLOT_DEFS = [
+  {match:0,  groups:['A','B','C','D','F']},
+  {match:1,  groups:['C','D','F','G','H']},
+  {match:6,  groups:['B','E','F','I','J']},
+  {match:7,  groups:['A','E','H','I','J']},
+  {match:10, groups:['C','E','F','H','I']},
+  {match:11, groups:['E','H','I','J','K']},
+  {match:14, groups:['E','F','G','I','J']},
+  {match:15, groups:['D','E','I','J','L']},
+];
+
+function computeThirdPlaceAssigned(thirds){
+  const qualifying=thirds.slice(0,8);
+  const assigned={};
+  const usedGroups=new Set();
+  for(let pass=0;pass<8;pass++){
+    const remaining=THIRD_SLOT_DEFS
+      .filter(s=>!(s.match in assigned))
+      .map(s=>({match:s.match, eligible:qualifying.filter(t=>s.groups.includes(t.group)&&!usedGroups.has(t.group))}))
+      .filter(s=>s.eligible.length>0)
+      .sort((a,b)=>a.eligible.length-b.eligible.length);
+    if(!remaining.length) break;
+    const slot=remaining[0];
+    const pick=slot.eligible[0];
+    assigned[slot.match]=pick.name;
+    usedGroups.add(pick.group);
+  }
+  return assigned;
+}
+
+function getR32pairs(){
+  const q=state.qualified;
+  if(q.length<24) return Array(16).fill(null).map(()=>[null,null]);
+  const ta=state.thirdPlaceAssigned;
+  const GRP='ABCDEFGHIJKL';
+  const f=(g)=>q[2*GRP.indexOf(g)]||null;   // 1st of group
+  const s=(g)=>q[2*GRP.indexOf(g)+1]||null;  // 2nd of group
+  const t=(m)=>ta[m]||null;                  // assigned 3rd for match m
+  return [
+    [f('E'), t(0) ],  // M0:  1E  vs 3rd[A/B/C/D/F]
+    [f('I'), t(1) ],  // M1:  1I  vs 3rd[C/D/F/G/H]
+    [s('A'), s('B')], // M2:  2A  vs 2B
+    [f('F'), s('C')], // M3:  1F  vs 2C
+    [s('K'), s('L')], // M4:  2K  vs 2L
+    [f('H'), s('J')], // M5:  1H  vs 2J
+    [f('D'), t(6) ],  // M6:  1D  vs 3rd[B/E/F/I/J]
+    [f('G'), t(7) ],  // M7:  1G  vs 3rd[A/E/H/I/J]
+    [f('C'), s('F')], // M8:  1C  vs 2F
+    [s('E'), s('I')], // M9:  2E  vs 2I
+    [f('A'), t(10)],  // M10: 1A  vs 3rd[C/E/F/H/I]
+    [f('L'), t(11)],  // M11: 1L  vs 3rd[E/H/I/J/K]
+    [f('J'), s('H')], // M12: 1J  vs 2H
+    [s('D'), s('G')], // M13: 2D  vs 2G
+    [f('B'), t(14)],  // M14: 1B  vs 3rd[E/F/G/I/J]
+    [f('K'), t(15)],  // M15: 1K  vs 3rd[D/E/I/J/L]
+  ];
+}
+
+function getR16pairs(){
+  const w=state.r32winners;
+  return [
+    [w[0]||null,w[1]||null],[w[2]||null,w[3]||null],
+    [w[4]||null,w[5]||null],[w[6]||null,w[7]||null],
+    [w[8]||null,w[9]||null],[w[10]||null,w[11]||null],
+    [w[12]||null,w[13]||null],[w[14]||null,w[15]||null],
+  ];
+}
+function getQFpairs(){
+  const w=state.r16winners;
+  return [[w[0]||null,w[1]||null],[w[2]||null,w[3]||null],[w[4]||null,w[5]||null],[w[6]||null,w[7]||null]];
+}
+function getSFpairs(){
+  const w=state.qfwinners;
+  return [[w[0]||null,w[1]||null],[w[2]||null,w[3]||null]];
+}
+function getFinalPair(){return[[state.sfwinners[0]||null,state.sfwinners[1]||null]];}
+
+function renderKOPhase(sectionId,title,pairs,phase){
+  const el=document.getElementById(sectionId);
+  let matches='';
+  pairs.forEach((pair,i)=>{
+    const lbl=KO_LABELS[phase]?.[i]||['?','?'];
+    const t1=pair[0]||lbl[0], t2=pair[1]||lbl[1];
+    const id=`${phase}-${i}`;
+    const s1=getScore(id,1),s2=getScore(id,2);
+    const w=s1!==s2?(s1>s2?t1:t2):null;
+    const saved=state.koScores[id];
+    if(saved){tempScores[`${id}-1`]=saved.s1;tempScores[`${id}-2`]=saved.s2;}
+    const hasTeams=pair[0]&&pair[1];
+    const mdt=MATCH_DATES[id]||'';
+    matches+=`<div class="ko-match">
+      ${mdt?`<div class="date-center">${mdt}</div>`:''}
+      <div class="ko-row"><div class="ko-team ${w===t1?'winner':''}">${pair[0]?flag(t1):'🔲'} ${t1}</div>${hasTeams?scoreControl(id,1):''}</div>
+      <div class="ko-row"><div class="ko-team ${w===t2?'winner':''}">${pair[1]?flag(t2):'🔲'} ${t2}</div>${hasTeams?scoreControl(id,2):''}</div>
+    </div>`;
+  });
+  const useGrid=pairs.length>=4;
+  el.innerHTML=`<div class="phase-header">${title}</div>
+    <div class="${useGrid?'ko-grid':''}">${matches}</div>`;
+}
+
+function renderR32(){renderKOPhase('section-r32','⚽  16-AVOS DE FINAL',getR32pairs(),'r32');}
+function renderR16(){renderKOPhase('section-r16','⚽  OITAVAS DE FINAL',getR16pairs(),'r16');}
+function renderQF(){renderKOPhase('section-qf','⚽  QUARTAS DE FINAL',getQFpairs(),'qf');}
+function renderSF(){renderKOPhase('section-sf','⚽  SEMI-FINAIS',getSFpairs(),'sf');}
+function renderFinal(){renderKOPhase('section-final','🏆  GRANDE FINAL',getFinalPair(),'final');}
+
+function renderChampion(){
+  const c=state.champion;
+  if(!c){
+    document.getElementById('section-champ').innerHTML=`<div class="phase-header">🏆 CAMPEÃO</div><p style="text-align:center;color:#7a7060;margin-top:30px">Aguardando a final...</p>`;
+    return;
+  }
+  document.getElementById('section-champ').innerHTML=`
+  <div class="champion-box">
+    <div style="font-size:60px">🏆</div>
+    <div style="font-size:50px;margin:10px 0">${flag(c)}</div>
+    <div style="font-size:22px;font-weight:900;letter-spacing:2px">CAMPEÃ DO MUNDO 2026</div>
+    <div style="font-size:18px;margin-top:8px;color:#c9a227">${c}</div>
+  </div>`;
+}
+
+/* ---- BRACKET (9 colunas) ---- */
+function renderBracket(){
+  const el=document.getElementById('section-bracket');
+  const r32p=getR32pairs();
+  const r32w=state.r32winners;
+  const r16p=r32w.filter(Boolean).length>=16?getR16pairs():Array(8).fill(null).map(()=>[null,null]);
+  const r16w=state.r16winners;
+  const qfp=r16w.filter(Boolean).length>=8?getQFpairs():Array(4).fill(null).map(()=>[null,null]);
+  const qfw=state.qfwinners;
+  const sfp=qfw.filter(Boolean).length>=4?getSFpairs():Array(2).fill(null).map(()=>[null,null]);
+  const sfw=state.sfwinners;
+  const fp=sfw.filter(Boolean).length>=2?getFinalPair()[0]:[null,null];
+  const champ=state.champion;
+  const RL=KO_LABELS.r32, R16L=KO_LABELS.r16;
+
+  function bTeam(name,w,lbl){
+    if(!name) return `<div class="b-team tbd">${lbl||'?'}</div>`;
+    return `<div class="b-team ${w===name?'winner':''}">${flag(name)} ${name}</div>`;
+  }
+  function bMatch(t1,t2,w,l1,l2){
+    return `<div class="b-match">${bTeam(t1,w,l1)}${bTeam(t2,w,l2)}</div>`;
+  }
+  function finalTeam(name,w,lbl){
+    if(!name) return `<div class="b-final-team tbd">${lbl||'?'}</div>`;
+    return `<div class="b-final-team ${w===name?'winner':''}">${flag(name)} ${name}</div>`;
+  }
+
+  el.innerHTML=`
+  <div class="phase-header">🏟  CHAVE</div>
+  <div class="bracket-header"><h2>⚽ COPA DO MUNDO 2026</h2></div>
+  <div class="bracket-wrap">
+  <div class="bracket-phases">
+    <div class="b-phase-label">16-AVOS</div>
+    <div class="b-phase-label">OITAVAS</div>
+    <div class="b-phase-label">QUARTAS</div>
+    <div class="b-phase-label">SEMIS</div>
+    <div class="b-phase-label final-lbl">FINAL</div>
+    <div class="b-phase-label">SEMIS</div>
+    <div class="b-phase-label">QUARTAS</div>
+    <div class="b-phase-label">OITAVAS</div>
+    <div class="b-phase-label">16-AVOS</div>
+  </div>
+  <div class="bracket" id="bracket-inner">
+
+    <div class="b-col" id="bc-r32l">
+      ${[0,1,2,3,4,5,6,7].map(i=>bMatch(r32p[i][0],r32p[i][1],r32w[i],RL[i][0],RL[i][1])).join('')}
+    </div>
+    <div class="b-col" id="bc-r16l">
+      ${[0,1,2,3].map(i=>bMatch(r16p[i][0],r16p[i][1],r16w[i],R16L[i][0],R16L[i][1])).join('')}
+    </div>
+    <div class="b-col" id="bc-qfl">
+      ${bMatch(qfp[0][0],qfp[0][1],qfw[0],'V.O1','V.O2')}
+      ${bMatch(qfp[1][0],qfp[1][1],qfw[1],'V.O3','V.O4')}
+    </div>
+    <div class="b-col" id="bc-sfl">
+      ${bMatch(sfp[0]?.[0],sfp[0]?.[1],sfw[0],'V.Q1','V.Q2')}
+    </div>
+
+    <div class="b-col-final">
+      <div class="b-trophy-top${champ?' glowing':''}"><img src="data:image/png;base64,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" alt="Taça"></div>
+      <div class="b-final-box">
+        ${finalTeam(fp[0],champ,'Venc. S1')}
+        ${finalTeam(fp[1],champ,'Venc. S2')}
+      </div>
+      ${champ?`<div class="b-champ-flag">${flag(champ)}</div><div class="b-champ-name">${champ}</div>`:''}
+    </div>
+
+    <div class="b-col" id="bc-sfr">
+      ${bMatch(sfp[1]?.[0],sfp[1]?.[1],sfw[1],'V.Q3','V.Q4')}
+    </div>
+    <div class="b-col" id="bc-qfr">
+      ${bMatch(qfp[2]?.[0],qfp[2]?.[1],qfw[2],'V.O5','V.O6')}
+      ${bMatch(qfp[3]?.[0],qfp[3]?.[1],qfw[3],'V.O7','V.O8')}
+    </div>
+    <div class="b-col" id="bc-r16r">
+      ${[4,5,6,7].map(i=>bMatch(r16p[i][0],r16p[i][1],r16w[i],R16L[i][0],R16L[i][1])).join('')}
+    </div>
+    <div class="b-col" id="bc-r32r">
+      ${[8,9,10,11,12,13,14,15].map(i=>bMatch(r32p[i][0],r32p[i][1],r32w[i],RL[i][0],RL[i][1])).join('')}
+    </div>
+
+  </div></div>`;
+
+  requestAnimationFrame(()=>{
+    drawBracketLines();
+    // Center the bracket-wrap scroll on the FINAL box
+    const bw=el.querySelector('.bracket-wrap');
+    const fc=el.querySelector('.b-col-final');
+    if(bw&&fc){
+      const target=fc.offsetLeft - bw.clientWidth/2 + fc.offsetWidth/2;
+      bw.scrollLeft=Math.max(0,target);
+    }
+  });
+}
+
+function drawBracketLines(){
+  const bracket=document.getElementById('bracket-inner');
+  if(!bracket) return;
+  const bRect=bracket.getBoundingClientRect();
+
+  function midY(el){
+    if(!el) return 0;
+    const r=el.getBoundingClientRect();
+    return r.top-bRect.top+r.height/2;
+  }
+  function midX(el,side){
+    if(!el) return 0;
+    const r=el.getBoundingClientRect();
+    return side==='right'?r.right-bRect.left:r.left-bRect.left;
+  }
+
+  const color='#2e3040';
+  const lines=[];
+
+  function connect(fromEl,toEl,side){
+    if(!fromEl||!toEl) return;
+    const fy=midY(fromEl), ty=midY(toEl);
+    const fx=midX(fromEl,side==='left'?'right':'left');
+    const tx=midX(toEl,side==='left'?'left':'right');
+    const mx=(fx+tx)/2;
+    lines.push(`<path d="M${fx},${fy} H${mx} V${ty} H${tx}" stroke="${color}" stroke-width="1.5" fill="none"/>`);
+  }
+
+  const r32lM=[...document.querySelectorAll('#bc-r32l .b-match')];
+  const r16lM=[...document.querySelectorAll('#bc-r16l .b-match')];
+  const qflM= [...document.querySelectorAll('#bc-qfl .b-match')];
+  const sflM= [...document.querySelectorAll('#bc-sfl .b-match')];
+  const finalBox=document.querySelector('.b-final-box');
+  const sfrM= [...document.querySelectorAll('#bc-sfr .b-match')];
+  const qfrM= [...document.querySelectorAll('#bc-qfr .b-match')];
+  const r16rM=[...document.querySelectorAll('#bc-r16r .b-match')];
+  const r32rM=[...document.querySelectorAll('#bc-r32r .b-match')];
+
+  // Left side: r32 → r16 → qf → sf → final
+  for(let i=0;i<4;i++){
+    if(r32lM[i*2]  &&r16lM[i]) connect(r32lM[i*2],  r16lM[i],'left');
+    if(r32lM[i*2+1]&&r16lM[i]) connect(r32lM[i*2+1],r16lM[i],'left');
+  }
+  if(r16lM[0]&&qflM[0]) connect(r16lM[0],qflM[0],'left');
+  if(r16lM[1]&&qflM[0]) connect(r16lM[1],qflM[0],'left');
+  if(r16lM[2]&&qflM[1]) connect(r16lM[2],qflM[1],'left');
+  if(r16lM[3]&&qflM[1]) connect(r16lM[3],qflM[1],'left');
+  if(qflM[0]&&sflM[0]) connect(qflM[0],sflM[0],'left');
+  if(qflM[1]&&sflM[0]) connect(qflM[1],sflM[0],'left');
+  if(sflM[0]&&finalBox) connect(sflM[0],finalBox,'left');
+
+  // Right side: r32 → r16 → qf → sf → final
+  for(let i=0;i<4;i++){
+    if(r32rM[i*2]  &&r16rM[i]) connect(r32rM[i*2],  r16rM[i],'right');
+    if(r32rM[i*2+1]&&r16rM[i]) connect(r32rM[i*2+1],r16rM[i],'right');
+  }
+  if(r16rM[0]&&qfrM[0]) connect(r16rM[0],qfrM[0],'right');
+  if(r16rM[1]&&qfrM[0]) connect(r16rM[1],qfrM[0],'right');
+  if(r16rM[2]&&qfrM[1]) connect(r16rM[2],qfrM[1],'right');
+  if(r16rM[3]&&qfrM[1]) connect(r16rM[3],qfrM[1],'right');
+  if(qfrM[0]&&sfrM[0]) connect(qfrM[0],sfrM[0],'right');
+  if(qfrM[1]&&sfrM[0]) connect(qfrM[1],sfrM[0],'right');
+  if(sfrM[0]&&finalBox) connect(sfrM[0],finalBox,'right');
+
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','bracket-svg');
+  svg.innerHTML=lines.join('');
+  const old=bracket.querySelector('.bracket-svg');
+  if(old) old.remove();
+  bracket.appendChild(svg);
+}
+
+/* ---- CLASSIFICAÇÃO ---- */
+function renderClass(){
+  const el=document.getElementById('section-class');
+  let html='<div class="phase-header">📊  CLASSIFICAÇÃO</div><div class="class-grid">';
+  for(const g of Object.keys(GROUPS)){
+    const table=standings(g);
+    html+=`<div class="class-group">
+      <div class="class-group-title">GRUPO ${g}</div>
+      <div class="class-col-headers">
+        <span class="class-h-name"></span>
+        <span class="class-h-stat">Pts</span>
+        <span class="class-h-stat">S</span>
+        <span class="class-h-stat">GP</span>
+      </div>`;
+    table.forEach((row,i)=>{
+      const cls=i<2?'qualified':i===2?'third-best':'';
+      const g=row.diff>0?`+${row.diff}`:String(row.diff);
+      html+=`<div class="class-row ${cls}">
+        <span class="class-pos">${i+1}</span>
+        <span class="class-flag">${flag(row.name)}</span>
+        <span class="class-name">${row.name}</span>
+        <span class="class-pts">${row.pts}</span>
+        <span class="class-gd">${g}</span>
+        <span class="class-gp">${row.gf}</span>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+/* ---- CALENDÁRIO ---- */
+function renderCalendarMatch(id) {
+  const parts = id.split('-');
+  const phase = parts[0];
+  const idx = parseInt(parts[1]);
+
+  let pair = [null, null];
+  let labels = ['?', '?'];
+
+  if (GROUPS[phase]) {
+    pair = genMatches(GROUPS[phase])[idx] || [null, null];
+    labels = [pair[0] || '?', pair[1] || '?'];
+  } else if (phase === 'r32') {
+    pair = getR32pairs()[idx] || [null, null];
+    labels = KO_LABELS.r32[idx] || ['?', '?'];
+  } else if (phase === 'r16') {
+    pair = getR16pairs()[idx] || [null, null];
+    labels = KO_LABELS.r16[idx] || ['?', '?'];
+  } else if (phase === 'qf') {
+    pair = getQFpairs()[idx] || [null, null];
+    labels = KO_LABELS.qf[idx] || ['?', '?'];
+  } else if (phase === 'sf') {
+    pair = getSFpairs()[idx] || [null, null];
+    labels = KO_LABELS.sf[idx] || ['?', '?'];
+  } else if (phase === 'final') {
+    pair = getFinalPair()[idx] || [null, null];
+    labels = KO_LABELS.final[idx] || ['?', '?'];
+  }
+
+  const t1 = pair[0] || labels[0];
+  const t2 = pair[1] || labels[1];
+  const s1 = getScore(id, 1), s2 = getScore(id, 2);
+  const w = s1 !== s2 ? (s1 > s2 ? t1 : t2) : null;
+  const hasTeams = !!(pair[0] && pair[1]);
+  const time = (MATCH_DATES[id] || '').split(' • ')[1] || '';
+  const phaseLabel = GROUPS[phase]
+    ? `GRUPO ${phase}`
+    : phase === 'r32' ? '16-AVOS'
+    : phase === 'r16' ? 'OITAVAS'
+    : phase === 'qf' ? 'QUARTAS'
+    : phase === 'sf' ? 'SEMIS'
+    : 'FINAL';
+
+  const calStandings = GROUPS[phase]
+    ? `<div class="standings" data-cal-standings="${phase}">${standingsHtml(phase)}</div>`
+    : '';
+
+  return `<div class="ko-match">
+    <div class="date-center">${phaseLabel}${time ? ' • ' + time : ''}</div>
+    <div class="ko-row"><div class="ko-team ${w === t1 ? 'winner' : ''}">${pair[0] ? flag(t1) : '🔲'} ${t1}</div>${hasTeams ? scoreControl(id, 1) : ''}</div>
+    <div class="ko-row"><div class="ko-team ${w === t2 ? 'winner' : ''}">${pair[1] ? flag(t2) : '🔲'} ${t2}</div>${hasTeams ? scoreControl(id, 2) : ''}</div>
+    ${calStandings}
+  </div>`;
+}
+
+function renderCalendar(date) {
+  if (date) calSelectedDate = date;
+  const sel = calSelectedDate || ALL_DATES[0];
+  const el = document.getElementById('section-calendar');
+
+  let stripHtml = '', lastMonth = '';
+  for (const d of ALL_DATES) {
+    const [, month] = d.split(' ');
+    if (month !== lastMonth) {
+      stripHtml += `<div class="cal-month-sep">${month}</div>`;
+      lastMonth = month;
+    }
+    const [day] = d.split(' ');
+    stripHtml += `<div class="cal-chip ${d === sel ? 'active' : ''}" onclick="renderCalendar('${d}')">${day}</div>`;
+  }
+
+  const matchIds = (DATES_INDEX[sel] || []).slice().sort((a, b) => {
+    const ta = (MATCH_DATES[a] || '').split(' • ')[1] || '';
+    const tb = (MATCH_DATES[b] || '').split(' • ')[1] || '';
+    return ta.localeCompare(tb);
+  });
+
+  const matchesHtml = matchIds.map(id => renderCalendarMatch(id)).join('') ||
+    '<p style="text-align:center;color:#7a7060;margin-top:24px">Sem jogos neste dia.</p>';
+
+  el.innerHTML = `
+    <div class="phase-header">📅 CALENDÁRIO</div>
+    <div class="cal-strip-wrap"><div class="cal-strip">${stripHtml}</div></div>
+    <div id="cal-matches">${matchesHtml}</div>`;
+
+  requestAnimationFrame(() => {
+    const chip = el.querySelector('.cal-chip.active');
+    if (chip) chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  });
+}
+
+/* ---- NAV ---- */
+const NAV_PHASES=[
+  {id:'section-groups',  label:'Grupos',  unlock:()=>true},
+  {id:'section-r32',     label:'16-Avos', unlock:()=>true},
+  {id:'section-r16',     label:'Oitavas', unlock:()=>state.r32winners.filter(Boolean).length>0},
+  {id:'section-qf',      label:'Quartas', unlock:()=>state.r16winners.filter(Boolean).length>0},
+  {id:'section-sf',      label:'Semis',   unlock:()=>state.qfwinners.filter(Boolean).length>0},
+  {id:'section-final',   label:'Final',   unlock:()=>state.sfwinners.filter(Boolean).length>0},
+  {id:'section-champ',   label:'🏆',      unlock:()=>state.champion!=null},
+  {id:'section-class',   label:'📊', sublabel:'CLASSIFICAÇÃO', special:true},
+  {id:'section-calendar',label:'📅', sublabel:'CALENDÁRIO',    special:true},
+  {id:'section-bracket', label:'🏟', sublabel:'CHAVE',         special:true},
+];
+
+function renderNav(activeId){
+  const phases  = NAV_PHASES.filter(p=>!p.special);
+  const specials = NAV_PHASES.filter(p=>p.special);
+  const sel = activeId||'section-groups';
+
+  const row1 = phases.map(p=>{
+    const ok=p.unlock(), active=sel===p.id;
+    return `<button class="nav-btn ${active?'active':''}" ${ok?`onclick="navTo('${p.id}')"`:'disabled'}>${p.label}</button>`;
+  }).join('');
+
+  const row2 = specials.map(p=>{
+    const active=sel===p.id;
+    return `<button class="nav-btn nav-btn-special ${active?'active':''}" onclick="navTo('${p.id}')">
+      <span class="nav-special-icon">${p.label}</span>
+      <span class="nav-special-label">${p.sublabel}</span>
+    </button>`;
+  }).join('');
+
+  document.getElementById('nav').innerHTML=
+    `<div class="nav-row1">${row1}</div><div class="nav-row2">${row2}</div>`;
+}
+
+function navTo(id){
+  const renders={
+    'section-groups':()=>{},'section-r32':renderR32,'section-r16':renderR16,
+    'section-qf':renderQF,'section-sf':renderSF,'section-final':renderFinal,
+    'section-champ':renderChampion,'section-bracket':renderBracket,
+    'section-class':renderClass,
+    'section-calendar':()=>renderCalendar(),
+  };
+  renders[id](); showSection(id);
+}
+
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const container=document.querySelector('.container');
+  container.classList.toggle('bracket-mode', id==='section-bracket');
+  renderNav(id);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Countdown
+(function(){
+  const start = new Date('2026-06-11T19:00:00-03:00'); // 11 JUN 16h00 BRT = 19:00 UTC-3
+  function tick(){
+    const now = new Date();
+    const diff = start - now;
+    if(diff <= 0){
+      const el = document.getElementById('countdown');
+      if(el) el.remove();
+      return;
+    }
+    const d = Math.floor(diff/86400000);
+    const h = Math.floor((diff%86400000)/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    const pad = n => String(n).padStart(2,'0');
+    document.getElementById('cdw-d').textContent = d;
+    document.getElementById('cdw-h').textContent = pad(h);
+    document.getElementById('cdw-m').textContent = pad(m);
+    document.getElementById('cdw-s').textContent = pad(s);
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+if('serviceWorker' in navigator)
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+loadState();
+renderGroups();
+for(const g of Object.keys(GROUPS)) updateGroupStandings(g);
+autoRefreshKO();
+renderNav('section-groups');
+</script>
+</body>
+</html>

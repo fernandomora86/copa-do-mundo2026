@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/simulador-copa-2026.html" }
+  ]
+}

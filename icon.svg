@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="90" fill="#111318"/>
+  <rect x="16" y="16" width="480" height="480" rx="74" fill="#161820"/>
+  <!-- taça simplificada -->
+  <ellipse cx="256" cy="170" rx="90" ry="95" fill="#c9a227"/>
+  <ellipse cx="256" cy="170" rx="72" ry="78" fill="#a07a1a"/>
+  <ellipse cx="256" cy="100" rx="72" ry="30" fill="#c9a227"/>
+  <rect x="220" y="255" width="72" height="28" rx="6" fill="#c9a227"/>
+  <rect x="196" y="278" width="120" height="20" rx="6" fill="#c9a227"/>
+  <rect x="208" y="295" width="96" height="50" rx="4" fill="#a07a1a"/>
+  <rect x="180" y="340" width="152" height="18" rx="6" fill="#c9a227"/>
+  <!-- handles -->
+  <path d="M166 140 Q130 155 135 190 Q140 220 172 225" stroke="#c9a227" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M346 140 Q382 155 377 190 Q372 220 340 225" stroke="#c9a227" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <!-- ano -->
+  <text x="256" y="430" text-anchor="middle" font-size="58" font-weight="900"
+        font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif"
+        fill="#c9a227" letter-spacing="2">2026</text>
+</svg>
