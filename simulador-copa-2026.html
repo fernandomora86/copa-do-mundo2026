@@ -1199,8 +1199,7 @@ async function entrarNoBolao(bolaoId){
         }
       }
     }
-    const lastTab = localStorage.getItem('copa2026_lastTab') || 'section-groups';
-    navTo(lastTab);
+    navTo('section-groups');
     window.scrollTo({top:0,behavior:'smooth'});
     agendarAtualizacoesDeJogo();
   } catch(e){ await uiError('Erro ao entrar no bolão: ' + e.message); }
