@@ -1191,6 +1191,7 @@ async function entrarNoBolao(bolaoId){
 
     await carregarPalpitesDoUsuario();
     await fetchResultadosDaSheet();
+    escutarResultados();
     renderGroups();
     for(const g of Object.keys(GROUPS)){ updateGroupStandings(g); updateGroupStandingsReal(g); }
     autoRefreshKO();
