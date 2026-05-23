@@ -1939,6 +1939,7 @@ function changeScore(id,slot,delta){
   }
 
   const wasPlayed=playedMatches.has(id);
+  if(!wasPlayed && delta<0) return;
   playedMatches.add(id);
   manualMatches.add(id);
 
