@@ -1212,7 +1212,8 @@ async function entrarNoBolao(bolaoId){
         }
       }
     }
-    const lastTab = localStorage.getItem('copa2026_lastTab') || 'section-groups';
+    const isReload = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+    const lastTab = isReload ? (localStorage.getItem('copa2026_lastTab') || 'section-groups') : 'section-groups';
     navTo(lastTab);
     window.scrollTo({top:0,behavior:'smooth'});
     agendarAtualizacoesDeJogo();
