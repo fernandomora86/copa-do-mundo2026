@@ -1257,6 +1257,8 @@ function escutarResultados(){
         if(ch.type==='added'||ch.type==='modified') currentResults[ch.doc.id]=ch.doc.data();
         else if(ch.type==='removed') delete currentResults[ch.doc.id];
       });
+      const active = document.querySelector('.section.active')?.id;
+      if(active === 'section-ranking') renderRanking();
     }, err => console.warn('Erro listener resultados:', err));
 }
 
