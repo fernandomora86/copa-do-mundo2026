@@ -1186,7 +1186,9 @@ async function entrarNoBolao(bolaoId){
     document.getElementById('bolao-header-share').style.display = isAdmin ? 'inline' : 'none';
 
     document.getElementById('lobby').style.display = 'none';
-    document.querySelector('.container').style.display = 'block';
+    const _container = document.querySelector('.container');
+    _container.style.opacity = '0';
+    _container.style.display = 'block';
 
     await carregarPalpitesDoUsuario();
     await fetchResultadosDaSheet();
@@ -1213,6 +1215,12 @@ async function entrarNoBolao(bolaoId){
     const isRefresh = navType === 'reload';
     const lastTab = isRefresh ? (localStorage.getItem('copa2026_lastTab') || 'section-groups') : 'section-groups';
     navTo(lastTab);
+    // Revela o container só após navegar para a aba correta — sem flash visível
+    requestAnimationFrame(()=>{
+      const c = document.querySelector('.container');
+      c.style.transition = 'opacity 0.15s';
+      c.style.opacity = '1';
+    });
     window.scrollTo({top:0,behavior:'smooth'});
     agendarAtualizacoesDeJogo();
   } catch(e){ await uiError('Erro ao entrar no bolão: ' + e.message); }
