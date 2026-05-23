@@ -1386,18 +1386,36 @@ async function renderRanking(){
     const ranking = [];
     for(const partDoc of partSnap.docs){
       const uid = partDoc.id;
-      const jogosSnap = await bolaoRef.collection('palpites').doc(uid).collection('jogos').get();
+      const isMe = uid === currentUser?.uid;
       let pts=0, exactos=0, acertos=0;
       const debugPalpites=[];
-      jogosSnap.forEach(d=>{
-        const res=results[d.id];
-        const palp=d.data();
-        const p = res ? calcPontos(palp.s1,palp.s2,res.s1,res.s2) : 0;
-        debugPalpites.push({jogo:d.id, palpite:`${palp.s1}-${palp.s2}`, res: res?`${res.s1}-${res.s2}`:'sem', pts:p});
-        if(res){ pts+=p; if(p===25)exactos++; if(p>0)acertos++; }
-      });
+
+      // Para o próprio usuário: lê palpite do estado local (mesma fonte da tela).
+      // Para outros: lê do Firebase.
+      if(isMe){
+        for(const jogoId of Object.keys(currentResults)){
+          const res = currentResults[jogoId];
+          if(!res || res.s1===undefined || res.s2===undefined) continue;
+          if(!playedMatches.has(jogoId)) continue;
+          const p1 = getScore(jogoId, 1);
+          const p2 = getScore(jogoId, 2);
+          const p = calcPontos(p1, p2, res.s1, res.s2);
+          debugPalpites.push({jogo:jogoId, palpite:`${p1}-${p2}`, res:`${res.s1}-${res.s2}`, pts:p, fonte:'local'});
+          pts += p; if(p===25) exactos++; if(p>0) acertos++;
+        }
+      } else {
+        const jogosSnap = await bolaoRef.collection('palpites').doc(uid).collection('jogos').get();
+        jogosSnap.forEach(d=>{
+          const res = results[d.id];
+          const palp = d.data();
+          if(!res) return;
+          const p = calcPontos(palp.s1, palp.s2, res.s1, res.s2);
+          debugPalpites.push({jogo:d.id, palpite:`${palp.s1}-${palp.s2}`, res:`${res.s1}-${res.s2}`, pts:p, fonte:'firebase'});
+          pts += p; if(p===25) exactos++; if(p>0) acertos++;
+        });
+      }
       console.log('[ranking]', partDoc.data().nome||uid, 'total:', pts, 'jogos:', debugPalpites);
-      ranking.push({ uid, nome:partDoc.data().nome||'Anônimo', photo:partDoc.data().photo||'', pts, exactos, acertos, isMe:uid===currentUser?.uid });
+      ranking.push({ uid, nome:partDoc.data().nome||'Anônimo', photo:partDoc.data().photo||'', pts, exactos, acertos, isMe });
     }
     ranking.sort((a,b)=>b.pts-a.pts||b.exactos-a.exactos||b.acertos-a.acertos);
     const rows = ranking.map((r,i)=>`
