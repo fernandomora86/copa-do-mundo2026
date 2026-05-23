@@ -886,6 +886,12 @@ h1 { text-align:center; font-size:18px; color:white; margin-bottom:14px; letter-
 </div>
 
 <div class="container" style="display:none">
+  <!-- Barra exibida apenas para visitantes não logados -->
+  <div id="guest-bar" style="display:none;align-items:center;justify-content:center;padding:10px 16px;background:#13141a;border-bottom:1px solid #c9a227;gap:12px">
+    <span style="font-size:12px;color:#b0a898">Quer disputar com os amigos?</span>
+    <button onclick="exigirLogin()" style="background:#c9a227;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:900;color:#0a0b0e;cursor:pointer">🏆 Participar de um Bolão</button>
+  </div>
+
   <div class="bolao-header" id="bolao-header">
     <button class="btn-back" onclick="voltarLobby()">← Bolões</button>
     <span class="bolao-header-nome" id="bolao-header-nome"></span>
@@ -959,12 +965,19 @@ let firebaseEnabled = false;
 
     auth.onAuthStateChanged(async (user) => {
       if(!user){
-        document.getElementById('login-modal').style.display = 'flex';
+        // Modo convidado: mostra o simulador sem exigir login
+        document.getElementById('login-modal').style.display = 'none';
+        document.getElementById('guest-bar').style.display = 'flex';
+        document.getElementById('bolao-header').style.display = 'none';
+        document.querySelector('.container').style.display = 'block';
+        document.getElementById('lobby').style.display = 'none';
         return;
       }
+      // Usuário logado: esconde barra de convidado e segue fluxo normal
+      document.getElementById('guest-bar').style.display = 'none';
+      document.getElementById('bolao-header').style.display = '';
       currentUser = user;
       currentUserName = user.displayName || user.email?.split('@')[0] || 'Usuário';
-      // Garante que o perfil existe no Firestore
       try {
         await db.collection('usuarios').doc(user.uid).set(
           { nome: currentUserName, email: user.email || '', updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
@@ -1002,13 +1015,20 @@ async function loginComGoogle(){
   }
 }
 
+function exigirLogin(){
+  document.getElementById('login-modal').style.display = 'flex';
+}
+
 async function fazerLogout(){
   if(!await uiConfirm('Sair da sua conta?', {icon:'👋', confirmLabel:'SAIR'})) return;
   await auth.signOut();
   currentUser = null; currentUserName = ''; currentBolao = null; isAdmin = false;
-  document.getElementById('login-modal').style.display = 'flex';
+  // Volta ao modo convidado em vez de travar na tela de login
+  document.getElementById('login-modal').style.display = 'none';
   document.getElementById('lobby').style.display = 'none';
-  document.querySelector('.container').style.display = 'none';
+  document.getElementById('guest-bar').style.display = 'flex';
+  document.getElementById('bolao-header').style.display = 'none';
+  document.querySelector('.container').style.display = 'block';
 }
 
 // ── LOBBY ─────────────────────────────────────────────────────────────────────
