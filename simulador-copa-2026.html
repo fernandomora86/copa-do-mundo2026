@@ -1213,8 +1213,14 @@ async function entrarNoBolao(bolaoId){
       }
     }
     const isReload = performance.getEntriesByType('navigation')[0]?.type === 'reload';
-    const lastTab = isReload ? (localStorage.getItem('copa2026_lastTab') || 'section-groups') : 'section-groups';
-    navTo(lastTab);
+    let targetTab;
+    if(isReload){
+      targetTab = localStorage.getItem('copa2026_lastTab') || 'section-groups';
+    } else {
+      // Nova sessão: respeita a aba que o usuário já clicou (se clicou) ou Grupos
+      targetTab = document.querySelector('.section.active')?.id || 'section-groups';
+    }
+    navTo(targetTab);
     window.scrollTo({top:0,behavior:'smooth'});
     agendarAtualizacoesDeJogo();
   } catch(e){ await uiError('Erro ao entrar no bolão: ' + e.message); }
