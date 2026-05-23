@@ -1210,9 +1210,7 @@ async function entrarNoBolao(bolaoId){
         }
       }
     }
-    const navType = performance.getEntriesByType('navigation')[0]?.type;
-    const isRefresh = navType === 'reload';
-    const lastTab = isRefresh ? (localStorage.getItem('copa2026_lastTab') || 'section-groups') : 'section-groups';
+    const lastTab = localStorage.getItem('copa2026_lastTab') || 'section-groups';
     navTo(lastTab);
     window.scrollTo({top:0,behavior:'smooth'});
     agendarAtualizacoesDeJogo();
