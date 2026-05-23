@@ -668,9 +668,136 @@ h1 { text-align:center; font-size:18px; color:white; margin-bottom:14px; letter-
 }
 .codigo-box .codigo-label { font-size:9px; color:#7a7060; letter-spacing:1px; margin-bottom:4px; }
 .codigo-box .codigo-value { font-size:24px; font-weight:900; color:#c9a227; letter-spacing:4px; }
+
+/* ═══════════════════════════
+   TOUR DE BOAS-VINDAS
+═══════════════════════════ */
+#tour-overlay {
+  position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,0.85);
+  display:flex; align-items:center; justify-content:center;
+  padding:16px;
+}
+#tour-overlay.hidden { display:none; }
+.tour-modal {
+  background:#13141a;
+  border:1px solid #c9a227;
+  border-radius:20px;
+  max-width:400px; width:100%;
+  padding:24px 20px 20px;
+  display:flex; flex-direction:column; align-items:center;
+  gap:12px; position:relative;
+  box-shadow:0 0 40px rgba(201,162,39,0.2);
+}
+.tour-raposa-wrap {
+  position:relative;
+  width:180px; height:180px;
+  display:flex; align-items:center; justify-content:center;
+}
+.tour-brilho {
+  position:absolute;
+  width:160px; height:160px;
+  border-radius:50%;
+  box-shadow:0 0 50px rgba(255,190,40,0.3);
+  animation:tourPulsarBrilho 2s ease-in-out infinite alternate;
+}
+.tour-raposa-img {
+  width:100%; height:auto; position:relative; z-index:2;
+  animation:tourQuicar 3s ease-in-out infinite;
+}
+@keyframes tourQuicar {
+  0%   { transform:translateY(0px) rotate(0deg); }
+  25%  { transform:translateY(-8px) rotate(-0.5deg); }
+  50%  { transform:translateY(0px) rotate(0deg); }
+  75%  { transform:translateY(-4px) rotate(0.5deg); }
+  100% { transform:translateY(0px) rotate(0deg); }
+}
+@keyframes tourPulsarBrilho {
+  0%   { transform:scale(0.96); opacity:0.5; }
+  100% { transform:scale(1.04); opacity:0.9; }
+}
+.tour-step { display:none; text-align:center; }
+.tour-step.active { display:block; }
+.tour-step-icon { font-size:32px; margin-bottom:6px; }
+.tour-step-titulo {
+  font-size:17px; font-weight:900;
+  color:#c9a227; letter-spacing:1px; margin-bottom:8px;
+}
+.tour-step-texto {
+  font-size:13px; color:#b0a898; line-height:1.6;
+}
+.tour-dots {
+  display:flex; gap:8px; justify-content:center;
+}
+.tour-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:#2e3040; transition:background 0.3s;
+}
+.tour-dot.active { background:#c9a227; }
+.tour-btns {
+  display:flex; gap:10px; width:100%; margin-top:4px;
+}
+.tour-btn-pular {
+  flex:1; padding:10px;
+  background:transparent; border:1px solid #2e3040;
+  color:#7a7060; border-radius:10px;
+  font-size:13px; cursor:pointer;
+}
+.tour-btn-avancar {
+  flex:2; padding:10px;
+  background:#c9a227; border:none;
+  color:#0a0b0e; border-radius:10px;
+  font-size:13px; font-weight:900; cursor:pointer;
+}
+.tour-btn-avancar:hover { background:#e8b830; }
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════════════
+     TOUR DE BOAS-VINDAS
+═══════════════════════════ -->
+<div id="tour-overlay" class="hidden">
+  <div class="tour-modal">
+    <div class="tour-raposa-wrap">
+      <div class="tour-brilho"></div>
+      <img src="raposa-tour.png" alt="Mascote" class="tour-raposa-img">
+    </div>
+
+    <div class="tour-step active" data-step="0">
+      <div class="tour-step-icon">⚽</div>
+      <div class="tour-step-titulo">Bem-vindo ao Bolão Copa 2026!</div>
+      <div class="tour-step-texto">O seu bolão da Copa do Mundo 2026. Faça palpites, dispute com os amigos e acompanhe quem vai ser campeão. Deixa eu te mostrar como funciona!</div>
+    </div>
+    <div class="tour-step" data-step="1">
+      <div class="tour-step-icon">🎯</div>
+      <div class="tour-step-titulo">Faça seus Palpites</div>
+      <div class="tour-step-texto">Antes de cada jogo começar, palpite no placar. Acertou o resultado? Pontos! Acertou o placar exato? Pontos extras! Quanto antes palpitar, melhor.</div>
+    </div>
+    <div class="tour-step" data-step="2">
+      <div class="tour-step-icon">🏆</div>
+      <div class="tour-step-titulo">Acompanhe o Ranking</div>
+      <div class="tour-step-texto">Veja sua posição em tempo real. A cada jogo encerrado a pontuação atualiza automaticamente. Quem acertar mais palpites leva a glória!</div>
+    </div>
+    <div class="tour-step" data-step="3">
+      <div class="tour-step-icon">🗺️</div>
+      <div class="tour-step-titulo">Veja a Chave</div>
+      <div class="tour-step-texto">Acompanhe o caminho de cada seleção até a grande final. A chave atualiza conforme os jogos acontecem. Quem vai ser campeão do mundo?</div>
+    </div>
+
+    <div class="tour-dots">
+      <div class="tour-dot active"></div>
+      <div class="tour-dot"></div>
+      <div class="tour-dot"></div>
+      <div class="tour-dot"></div>
+    </div>
+
+    <div class="tour-btns">
+      <button class="tour-btn-pular" onclick="fecharTour()">Pular</button>
+      <button class="tour-btn-avancar" onclick="avancarTour()">Próximo →</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL UI CUSTOMIZADO -->
 <div id="ui-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:16px">
@@ -2808,6 +2935,39 @@ setInterval(function patchLock(){
     }
   }
 }, 800);
+
+/* ═══════════════════════════
+   TOUR DE BOAS-VINDAS
+═══════════════════════════ */
+(function(){
+  if(localStorage.getItem('tour-visto')) return;
+  document.getElementById('tour-overlay').classList.remove('hidden');
+})();
+
+let _tourStep = 0;
+const _tourTotal = 4;
+
+function avancarTour(){
+  const steps = document.querySelectorAll('.tour-step');
+  const dots  = document.querySelectorAll('.tour-dot');
+  const btn   = document.querySelector('.tour-btn-avancar');
+
+  steps[_tourStep].classList.remove('active');
+  dots[_tourStep].classList.remove('active');
+  _tourStep++;
+
+  if(_tourStep >= _tourTotal){ fecharTour(); return; }
+
+  steps[_tourStep].classList.add('active');
+  dots[_tourStep].classList.add('active');
+
+  if(_tourStep === _tourTotal - 1) btn.textContent = 'Começar! 🚀';
+}
+
+function fecharTour(){
+  localStorage.setItem('tour-visto','1');
+  document.getElementById('tour-overlay').classList.add('hidden');
+}
 </script>
 </body>
 </html>
