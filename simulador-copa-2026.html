@@ -1317,10 +1317,11 @@ function agendarAtualizacoesDeJogo(){
     if(active === 'section-groups') renderGroups();
     else if(active === 'section-calendar') renderCalendar();
   }
-  function onJogoTerminado(){
+  async function onJogoTerminado(){
     if(!currentBolao) return;
     reRenderSeAtivo();
-    renderRanking(); // atualiza ranking sempre ao fim do jogo, independente da aba ativa
+    await fetchResultadosDaSheet(); // garante resultado mais recente da planilha
+    renderRanking();
   }
   for(const id of Object.keys(MATCH_DATES)){
     const t = _matchStartUTC(id);
@@ -1369,9 +1370,7 @@ async function renderRanking(){
   if(!firebaseEnabled || !currentBolao){ el.innerHTML = `<div class="phase-header">🏆 RANKING DO BOLÃO</div><p style="text-align:center;color:#7a7060;margin-top:30px;font-size:12px">Sem bolão ativo.</p>`; return; }
   try {
     const bolaoRef = db.collection('boloes').doc(currentBolao.id);
-    const resSnap = await bolaoRef.collection('resultados').get();
-    const results = {};
-    resSnap.forEach(d=>{ results[d.id]=d.data(); });
+    const results = currentResults;
     const semResultados = Object.keys(results).length === 0;
     const partSnap = await bolaoRef.collection('participantes').get();
     const ranking = [];
