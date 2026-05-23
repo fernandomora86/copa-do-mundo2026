@@ -1355,7 +1355,13 @@ async function saveResult(id, s1, s2){
 }
 
 // ── RANKING ───────────────────────────────────────────────────────────────────
-function calcPontos(p1, p2, r1, r2){
+function calcPontos(p1Raw, p2Raw, r1Raw, r2Raw){
+  // Força conversão para inteiro — defensivo contra strings vindas do Firebase/CSV
+  const p1 = parseInt(p1Raw, 10);
+  const p2 = parseInt(p2Raw, 10);
+  const r1 = parseInt(r1Raw, 10);
+  const r2 = parseInt(r2Raw, 10);
+  if(isNaN(p1) || isNaN(p2) || isNaN(r1) || isNaN(r2)) return 0;
   // 25: placar exato
   if(p1===r1 && p2===r2) return 25;
   // 18: acertou o resultado (vitória time1, vitória time2, ou empate)
@@ -1382,11 +1388,15 @@ async function renderRanking(){
       const uid = partDoc.id;
       const jogosSnap = await bolaoRef.collection('palpites').doc(uid).collection('jogos').get();
       let pts=0, exactos=0, acertos=0;
+      const debugPalpites=[];
       jogosSnap.forEach(d=>{
-        const res=results[d.id]; if(!res) return;
-        const p=calcPontos(d.data().s1,d.data().s2,res.s1,res.s2);
-        pts+=p; if(p===25)exactos++; if(p>0)acertos++;
+        const res=results[d.id];
+        const palp=d.data();
+        const p = res ? calcPontos(palp.s1,palp.s2,res.s1,res.s2) : 0;
+        debugPalpites.push({jogo:d.id, palpite:`${palp.s1}-${palp.s2}`, res: res?`${res.s1}-${res.s2}`:'sem', pts:p});
+        if(res){ pts+=p; if(p===25)exactos++; if(p>0)acertos++; }
       });
+      console.log('[ranking]', partDoc.data().nome||uid, 'total:', pts, 'jogos:', debugPalpites);
       ranking.push({ uid, nome:partDoc.data().nome||'Anônimo', photo:partDoc.data().photo||'', pts, exactos, acertos, isMe:uid===currentUser?.uid });
     }
     ranking.sort((a,b)=>b.pts-a.pts||b.exactos-a.exactos||b.acertos-a.acertos);
@@ -1701,9 +1711,19 @@ async function checarPlanilha(){
   if(!currentBolao) return;
   const mudou = await fetchResultadosDaSheet({ silencioso:true });
   if(mudou){
+    // Recalcula classificações e mata-mata com os dados novos
+    for(const g of Object.keys(GROUPS)){
+      updateGroupStandings(g);
+      updateGroupStandingsReal(g);
+    }
+    autoRefreshKO();
+    // Re-renderiza a seção atualmente visível
     const active = document.querySelector('.section.active')?.id;
-    if(active === 'section-groups') renderGroups();
+    if(active === 'section-groups')        renderGroups();
     else if(active === 'section-calendar') renderCalendar();
+    else if(active === 'section-class')    renderClass();
+    else if(active === 'section-bracket')  renderBracket();
+    // Ranking sempre é recalculado, independente da aba ativa
     renderRanking();
   }
 }
