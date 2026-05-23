@@ -1356,12 +1356,15 @@ async function saveResult(id, s1, s2){
 
 // ── RANKING ───────────────────────────────────────────────────────────────────
 function calcPontos(p1, p2, r1, r2){
+  // 25: placar exato
   if(p1===r1 && p2===r2) return 25;
-  const pW = p1>p2?1:p1<p2?2:0;
-  const rW = r1>r2?1:r1<r2?2:0;
-  if(pW!==rW) return 0;
-  if((p1-p2)===(r1-r2)) return 18;
-  return 10;
+  // 18: acertou o resultado (vitória time1, vitória time2, ou empate)
+  const pW = p1>p2 ? 1 : p1<p2 ? 2 : 0;
+  const rW = r1>r2 ? 1 : r1<r2 ? 2 : 0;
+  if(pW === rW) return 18;
+  // 5: errou o vencedor mas acertou pelo menos um número do placar
+  if(p1===r1 || p2===r2) return 5;
+  return 0;
 }
 
 async function renderRanking(){
@@ -1406,7 +1409,7 @@ async function renderRanking(){
         </tr></thead><tbody>${rows}</tbody></table>
       </div>
       <div style="font-size:10px;color:#4a4540;text-align:center;margin-top:10px;line-height:1.6">
-        ⭐ placar exato = 25pts &nbsp;|&nbsp; saldo + resultado = 18pts &nbsp;|&nbsp; só resultado = 10pts
+        ⭐ placar exato = 25pts &nbsp;|&nbsp; acertou o vencedor = 18pts &nbsp;|&nbsp; um número certo = 5pts
       </div>
       <button onclick="renderRanking()" style="display:flex;align-items:center;gap:6px;margin:12px auto 0;background:none;border:1px solid #2e3040;border-radius:8px;color:#7a7060;font-size:11px;font-weight:bold;padding:8px 16px;cursor:pointer;letter-spacing:0.5px">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7a7060" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -1669,11 +1672,11 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqx2Efuu
 
 async function fetchResultadosDaSheet({ silencioso=false }={}){
   try {
-    const resp = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
+    const resp = await fetch(SHEET_CSV_URL + '&t=' + Date.now(), { cache:'no-store' });
     if(!resp.ok) return false;
     const text = await resp.text();
+    const antes = JSON.stringify(currentResults);
     const lines = text.trim().split('\n').slice(1);
-    let houveMudanca = false;
     for(const line of lines){
       const cols = line.split(',');
       const id = cols[0]?.trim();
@@ -1682,11 +1685,13 @@ async function fetchResultadosDaSheet({ silencioso=false }={}){
       if(!id || s1 === '' || s2 === '' || s1 === undefined || s2 === undefined) continue;
       const n1 = parseInt(s1), n2 = parseInt(s2);
       if(isNaN(n1) || isNaN(n2)) continue;
-      const ant = currentResults[id];
-      if(!ant || ant.s1 !== n1 || ant.s2 !== n2){ currentResults[id]={s1:n1,s2:n2}; houveMudanca=true; }
+      currentResults[id] = { s1:n1, s2:n2 };
     }
     for(const g of Object.keys(GROUPS)) updateGroupStandingsReal(g);
-    return houveMudanca;
+    const depois = JSON.stringify(currentResults);
+    const mudou = antes !== depois;
+    console.log('[planilha]', new Date().toLocaleTimeString(), 'jogos:', Object.keys(currentResults).length, 'mudou:', mudou);
+    return mudou;
   } catch(e){ console.warn('Erro ao buscar resultados da sheet:', e); return false; }
 }
 
