@@ -1316,15 +1316,19 @@ function agendarAtualizacoesDeJogo(){
     const active = document.querySelector('.section.active')?.id;
     if(active === 'section-groups') renderGroups();
     else if(active === 'section-calendar') renderCalendar();
-    else if(active === 'section-ranking') renderRanking();
+  }
+  function onJogoTerminado(){
+    if(!currentBolao) return;
+    reRenderSeAtivo();
+    renderRanking(); // atualiza ranking sempre ao fim do jogo, independente da aba ativa
   }
   for(const id of Object.keys(MATCH_DATES)){
     const t = _matchStartUTC(id);
     if(!t) continue;
     const toLock   = t - now;
     const toFinish = t + MATCH_DURATION_MS - now;
-    if(toLock   > 0 && toLock   < JANELA) setTimeout(reRenderSeAtivo, toLock   + 500);
-    if(toFinish > 0 && toFinish < JANELA) setTimeout(reRenderSeAtivo, toFinish + 500);
+    if(toLock   > 0 && toLock   < JANELA) setTimeout(reRenderSeAtivo,   toLock   + 500);
+    if(toFinish > 0 && toFinish < JANELA) setTimeout(onJogoTerminado,   toFinish + 500);
   }
 }
 
@@ -1365,7 +1369,9 @@ async function renderRanking(){
   if(!firebaseEnabled || !currentBolao){ el.innerHTML = `<div class="phase-header">🏆 RANKING DO BOLÃO</div><p style="text-align:center;color:#7a7060;margin-top:30px;font-size:12px">Sem bolão ativo.</p>`; return; }
   try {
     const bolaoRef = db.collection('boloes').doc(currentBolao.id);
-    const results = currentResults;
+    const resSnap = await bolaoRef.collection('resultados').get();
+    const results = {};
+    resSnap.forEach(d=>{ results[d.id]=d.data(); });
     const semResultados = Object.keys(results).length === 0;
     const partSnap = await bolaoRef.collection('participantes').get();
     const ranking = [];
@@ -1933,8 +1939,8 @@ async function resetSimulation(){
 }
 
 function changeScore(id,slot,delta){
-  // Bloqueia para TODOS (admin incluso) assim que o jogo inicia
-  if(isGameStarted(id)){
+  // Bloqueia participantes após o jogo iniciar; admin pode lançar resultado mesmo depois
+  if(isGameStarted(id) && !isAdmin){
     const el=document.querySelector(`[data-score-id="${id}-${slot}"]`);
     if(el){ const orig=el.style.color; el.style.color='#e53e3e'; setTimeout(()=>el.style.color=orig,500); }
     return;
