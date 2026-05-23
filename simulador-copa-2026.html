@@ -1192,6 +1192,7 @@ async function entrarNoBolao(bolaoId){
     await carregarPalpitesDoUsuario();
     await fetchResultadosDaSheet();
     escutarResultados();
+    iniciarPollSheet();
     renderGroups();
     for(const g of Object.keys(GROUPS)){ updateGroupStandings(g); updateGroupStandingsReal(g); }
     autoRefreshKO();
@@ -1264,6 +1265,7 @@ function escutarResultados(){
 
 function voltarLobby(){
   if(_unsubResultados){ _unsubResultados(); _unsubResultados=null; }
+  pararPollSheet();
   localStorage.removeItem('copa2026_lastBolao');
   currentBolao = null; isAdmin = false;
   Object.keys(tempScores).forEach(k=>delete tempScores[k]);
@@ -1317,11 +1319,9 @@ function agendarAtualizacoesDeJogo(){
     if(active === 'section-groups') renderGroups();
     else if(active === 'section-calendar') renderCalendar();
   }
-  async function onJogoTerminado(){
+  function onJogoTerminado(){
     if(!currentBolao) return;
     reRenderSeAtivo();
-    await fetchResultadosDaSheet(); // garante resultado mais recente da planilha
-    renderRanking();
   }
   for(const id of Object.keys(MATCH_DATES)){
     const t = _matchStartUTC(id);
@@ -1666,12 +1666,13 @@ const playedMatches=new Set();
 
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqx2EfuuNW9YKnnydj8hSHbZI32CY5CxSw5kwf7DSZGzO7RkzVOWjdcBZA7BFq0f-L0ohjEdGSYcjY/pub?output=csv';
 
-async function fetchResultadosDaSheet(){
+async function fetchResultadosDaSheet({ silencioso=false }={}){
   try {
     const resp = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
-    if(!resp.ok) return;
+    if(!resp.ok) return false;
     const text = await resp.text();
-    const lines = text.trim().split('\n').slice(1); // skip header
+    const lines = text.trim().split('\n').slice(1);
+    let houveMudanca = false;
     for(const line of lines){
       const cols = line.split(',');
       const id = cols[0]?.trim();
@@ -1680,12 +1681,31 @@ async function fetchResultadosDaSheet(){
       if(!id || s1 === '' || s2 === '' || s1 === undefined || s2 === undefined) continue;
       const n1 = parseInt(s1), n2 = parseInt(s2);
       if(isNaN(n1) || isNaN(n2)) continue;
-      currentResults[id] = { s1: n1, s2: n2 };
+      const ant = currentResults[id];
+      if(!ant || ant.s1 !== n1 || ant.s2 !== n2){ currentResults[id]={s1:n1,s2:n2}; houveMudanca=true; }
     }
-    // Atualiza classificação oficial com novos resultados
     for(const g of Object.keys(GROUPS)) updateGroupStandingsReal(g);
-    // patchLock (800ms) atualiza ✓/✗ no DOM diretamente
-  } catch(e){ console.warn('Erro ao buscar resultados da sheet:', e); }
+    return houveMudanca;
+  } catch(e){ console.warn('Erro ao buscar resultados da sheet:', e); return false; }
+}
+
+// Polling: verifica planilha a cada 60s enquanto estiver num bolão
+let _pollSheet = null;
+function iniciarPollSheet(){
+  if(_pollSheet) return;
+  _pollSheet = setInterval(async ()=>{
+    if(!currentBolao){ pararPollSheet(); return; }
+    const mudou = await fetchResultadosDaSheet({ silencioso:true });
+    if(mudou){
+      const active = document.querySelector('.section.active')?.id;
+      if(active === 'section-groups') renderGroups();
+      else if(active === 'section-calendar') renderCalendar();
+      renderRanking();
+    }
+  }, 60000);
+}
+function pararPollSheet(){
+  if(_pollSheet){ clearInterval(_pollSheet); _pollSheet=null; }
 }
 function getScore(id,slot){
   const key=`${id}-${slot}`;
