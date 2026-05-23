@@ -2000,10 +2000,9 @@ function changeScore(id,slot,delta){
 
   saveState();
 
-  // Firebase: salva palpite (usuário) ou resultado real (admin)
+  // Firebase: salva sempre como palpite (resultado oficial vem da planilha)
   const fs1=getScore(id,1), fs2=getScore(id,2);
-  if(isAdmin) saveResult(id, fs1, fs2);
-  else savePalpite(id, fs1, fs2);
+  savePalpite(id, fs1, fs2);
 }
 
 function standingsHtml(g){
