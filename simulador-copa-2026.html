@@ -1319,8 +1319,9 @@ function agendarAtualizacoesDeJogo(){
     if(active === 'section-groups') renderGroups();
     else if(active === 'section-calendar') renderCalendar();
   }
-  function onJogoTerminado(){
+  async function onJogoTerminado(){
     if(!currentBolao) return;
+    await checarPlanilha();
     reRenderSeAtivo();
   }
   for(const id of Object.keys(MATCH_DATES)){
@@ -1689,20 +1690,24 @@ async function fetchResultadosDaSheet({ silencioso=false }={}){
   } catch(e){ console.warn('Erro ao buscar resultados da sheet:', e); return false; }
 }
 
-// Polling: verifica planilha a cada 60s enquanto estiver num bolão
+// Polling: verifica planilha a cada 20s enquanto estiver num bolão
 let _pollSheet = null;
+async function checarPlanilha(){
+  if(!currentBolao) return;
+  const mudou = await fetchResultadosDaSheet({ silencioso:true });
+  if(mudou){
+    const active = document.querySelector('.section.active')?.id;
+    if(active === 'section-groups') renderGroups();
+    else if(active === 'section-calendar') renderCalendar();
+    renderRanking();
+  }
+}
 function iniciarPollSheet(){
   if(_pollSheet) return;
-  _pollSheet = setInterval(async ()=>{
+  _pollSheet = setInterval(()=>{
     if(!currentBolao){ pararPollSheet(); return; }
-    const mudou = await fetchResultadosDaSheet({ silencioso:true });
-    if(mudou){
-      const active = document.querySelector('.section.active')?.id;
-      if(active === 'section-groups') renderGroups();
-      else if(active === 'section-calendar') renderCalendar();
-      renderRanking();
-    }
-  }, 60000);
+    checarPlanilha();
+  }, 20000);
 }
 function pararPollSheet(){
   if(_pollSheet){ clearInterval(_pollSheet); _pollSheet=null; }
@@ -2846,6 +2851,8 @@ function navTo(id){
     'section-historico':renderHistorico,
   };
   renders[id](); showSection(id);
+  // Verifica planilha em background ao trocar de aba (não bloqueia render)
+  if(currentBolao) checarPlanilha();
 }
 
 function showSection(id){
