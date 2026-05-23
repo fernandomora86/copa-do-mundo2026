@@ -867,7 +867,7 @@ h1 { text-align:center; font-size:18px; color:white; margin-bottom:14px; letter-
 </div>
 
 <!-- LOBBY -->
-<div id="lobby">
+<div id="lobby" style="display:none">
   <div class="lobby-inner">
     <h1>⚽ COPA DO MUNDO 2026</h1>
     <div class="lobby-user" style="cursor:default">
@@ -885,7 +885,7 @@ h1 { text-align:center; font-size:18px; color:white; margin-bottom:14px; letter-
   </div>
 </div>
 
-<div class="container" style="display:none">
+<div class="container">
   <!-- Barra exibida apenas para visitantes não logados -->
   <div id="guest-bar" style="display:none;align-items:center;justify-content:center;padding:7px 2px;background:#13141a;border:1px solid #c9a227;border-radius:6px;gap:8px;margin-bottom:4px">
     <span style="font-size:10px;color:#b0a898">Quer disputar com os amigos?</span>
@@ -1186,9 +1186,7 @@ async function entrarNoBolao(bolaoId){
     document.getElementById('bolao-header-share').style.display = isAdmin ? 'inline' : 'none';
 
     document.getElementById('lobby').style.display = 'none';
-    const _container = document.querySelector('.container');
-    _container.style.opacity = '0';
-    _container.style.display = 'block';
+    document.querySelector('.container').style.display = 'block';
 
     await carregarPalpitesDoUsuario();
     await fetchResultadosDaSheet();
@@ -1215,12 +1213,6 @@ async function entrarNoBolao(bolaoId){
     const isRefresh = navType === 'reload';
     const lastTab = isRefresh ? (localStorage.getItem('copa2026_lastTab') || 'section-groups') : 'section-groups';
     navTo(lastTab);
-    // Revela o container só após navegar para a aba correta — sem flash visível
-    requestAnimationFrame(()=>{
-      const c = document.querySelector('.container');
-      c.style.transition = 'opacity 0.15s';
-      c.style.opacity = '1';
-    });
     window.scrollTo({top:0,behavior:'smooth'});
     agendarAtualizacoesDeJogo();
   } catch(e){ await uiError('Erro ao entrar no bolão: ' + e.message); }
@@ -2911,7 +2903,13 @@ loadState();
 renderGroups();
 for(const g of Object.keys(GROUPS)){ updateGroupStandings(g); updateGroupStandingsReal(g); }
 autoRefreshKO();
-renderNav('section-groups');
+// Abre já na aba correta: se for reload, restaura a última aba; se não, começa em grupos
+(function(){
+  const isReload = performance.getEntriesByType('navigation')[0]?.type === 'reload';
+  const initTab  = isReload ? (localStorage.getItem('copa2026_lastTab') || 'section-groups') : 'section-groups';
+  renderNav(initTab);
+  showSection(initTab);
+})();
 
 // Busca resultados da planilha a cada 2 minutos
 setInterval(function(){ if(currentBolao) fetchResultadosDaSheet(); }, 2 * 60 * 1000);
