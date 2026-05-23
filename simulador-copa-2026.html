@@ -991,7 +991,16 @@ let firebaseEnabled = false;
       if(lastBolaoId){
         await entrarNoBolao(lastBolaoId);
       } else {
-        mostrarLobby();
+        // Sem bolão ativo: abre simulador em grupos e oferece acesso ao lobby
+        document.getElementById('lobby').style.display = 'none';
+        document.querySelector('.container').style.display = 'block';
+        document.getElementById('bolao-header').style.display = 'none';
+        const gb = document.getElementById('guest-bar');
+        gb.style.display = 'flex';
+        gb.querySelector('span').textContent = 'Olá, ' + currentUserName + '!';
+        gb.querySelector('button').textContent = '🏆 Meus Bolões';
+        gb.querySelector('button').onclick = mostrarLobby;
+        navTo('section-groups');
       }
     });
   } catch(e){ console.warn('Firebase init error:', e); }
@@ -1169,6 +1178,7 @@ async function entrarNoBolao(bolaoId){
     currentBolao = { id: bolaoId, ...doc.data() };
     isAdmin = currentUser.uid === currentBolao.adminUid;
     localStorage.setItem('copa2026_lastBolao', bolaoId);
+    document.getElementById('guest-bar').style.display = 'none';
 
     document.getElementById('bolao-header-nome').textContent = currentBolao.nome;
     document.getElementById('bolao-header').classList.add('visible');
