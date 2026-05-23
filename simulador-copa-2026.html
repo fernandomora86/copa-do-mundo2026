@@ -1209,7 +1209,8 @@ async function entrarNoBolao(bolaoId){
         }
       }
     }
-    const lastTab = sessionStorage.getItem('copa2026_lastTab') || 'section-groups';
+    const isRefresh = sessionStorage.getItem('copa2026_session_active');
+    const lastTab = isRefresh ? (localStorage.getItem('copa2026_lastTab') || 'section-groups') : 'section-groups';
     navTo(lastTab);
     window.scrollTo({top:0,behavior:'smooth'});
     agendarAtualizacoesDeJogo();
@@ -2807,7 +2808,8 @@ function renderNav(activeId){
 }
 
 function navTo(id){
-  sessionStorage.setItem('copa2026_lastTab', id);
+  sessionStorage.setItem('copa2026_session_active', '1');
+  localStorage.setItem('copa2026_lastTab', id);
   const renders={
     'section-groups':renderGroups,'section-r32':renderR32,'section-r16':renderR16,
     'section-qf':renderQF,'section-sf':renderSF,'section-final':renderFinal,
