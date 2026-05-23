@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Perfis de usuários
+    match /usuarios/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Bolões
+    match /boloes/{bolaoId} {
+      // Qualquer autenticado pode ler (para buscar pelo código de convite)
+      allow read: if request.auth != null;
+      // Qualquer autenticado pode criar um bolão
+      allow create: if request.auth != null;
+      // Só o admin pode editar/deletar
+      allow update, delete: if request.auth != null
+        && resource.data.adminUid == request.auth.uid;
+
+      // Participantes do bolão
+      match /participantes/{uid} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && (
+          request.auth.uid == uid ||
+          get(/databases/$(database)/documents/boloes/$(bolaoId)).data.adminUid == request.auth.uid
+        );
+      }
+
+      // Palpites: cada participante só grava os próprios; admin pode deletar
+      match /palpites/{uid} {
+        allow read: if request.auth != null;
+        allow delete: if request.auth != null &&
+          get(/databases/$(database)/documents/boloes/$(bolaoId)).data.adminUid == request.auth.uid;
+      }
+      match /palpites/{uid}/jogos/{gameId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && (
+          request.auth.uid == uid ||
+          get(/databases/$(database)/documents/boloes/$(bolaoId)).data.adminUid == request.auth.uid
+        );
+      }
+
+      // Resultados reais: só o admin do bolão pode gravar
+      match /resultados/{gameId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null
+          && get(/databases/$(database)/documents/boloes/$(bolaoId)).data.adminUid == request.auth.uid;
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+.vercel
+.claude/
+
+# Backups
+*-BACKUP*.html
+*-BACKUP.png
+
+# Demos / protótipos
+demo-*.html
+
+# Arquivos não relacionados ao projeto
+*.pdf
+gen_csv.py
+copa2026-resultados.csv
+_template-novo-projeto/
+taca-BACKUP.png
