@@ -1178,6 +1178,7 @@ async function entrarNoBolao(bolaoId){
     currentBolao = { id: bolaoId, ...doc.data() };
     isAdmin = currentUser.uid === currentBolao.adminUid;
     localStorage.setItem('copa2026_lastBolao', bolaoId);
+    localStorage.setItem('copa2026_lastBolaoNome', currentBolao.nome);
     document.getElementById('guest-bar').style.display = 'none';
 
     document.getElementById('bolao-header-nome').textContent = currentBolao.nome;
@@ -2900,6 +2901,15 @@ function uiPrompt(msg, inputValue='')          { return _uiShow({ icon:'✏️',
 
 verificarCodigoNaURL();
 loadState();
+// Mostra o header do bolão imediatamente com dados em cache (antes do Firebase)
+(function(){
+  const cachedBolaoId   = localStorage.getItem('copa2026_lastBolao');
+  const cachedBolaoNome = localStorage.getItem('copa2026_lastBolaoNome');
+  if(cachedBolaoId && cachedBolaoNome){
+    document.getElementById('bolao-header-nome').textContent = cachedBolaoNome;
+    document.getElementById('bolao-header').classList.add('visible');
+  }
+})();
 renderGroups();
 for(const g of Object.keys(GROUPS)){ updateGroupStandings(g); updateGroupStandingsReal(g); }
 autoRefreshKO();
