@@ -1209,7 +1209,8 @@ async function entrarNoBolao(bolaoId){
         }
       }
     }
-    navTo('section-groups');
+    const lastTab = sessionStorage.getItem('copa2026_lastTab') || 'section-groups';
+    navTo(lastTab);
     window.scrollTo({top:0,behavior:'smooth'});
     agendarAtualizacoesDeJogo();
   } catch(e){ await uiError('Erro ao entrar no bolão: ' + e.message); }
@@ -2806,7 +2807,7 @@ function renderNav(activeId){
 }
 
 function navTo(id){
-  localStorage.setItem('copa2026_lastTab', id);
+  sessionStorage.setItem('copa2026_lastTab', id);
   const renders={
     'section-groups':renderGroups,'section-r32':renderR32,'section-r16':renderR16,
     'section-qf':renderQF,'section-sf':renderSF,'section-final':renderFinal,
