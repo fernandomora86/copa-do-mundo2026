@@ -1710,7 +1710,7 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqx2Efuu
 
 // ── WEB PUSH ──────────────────────────────────────────────────────────────────
 const VAPID_PUBLIC_KEY = 'BJbw1xgjCLjQhBLTv_CKpRx7YsZpQYLvm2bVc0pHVGMyt-r08Uwy9YSEUtum_cq0FTn30ySOdI6TYGkqtZgPPU0';
-const NOTIFY_SECRET    = 'copa2026push16157';
+const NOTIFY_SECRET    = 'copa2026notify';
 
 function _vapidKey(base64) {
   const raw = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
@@ -1770,13 +1770,13 @@ async function notificarResultado(jogoId, s1, s2) {
   } catch (e) { console.warn('[push] notificar falhou:', e); }
 }
 
-async function fetchResultadosDaSheet({ silencioso=false }={}){
+async function fetchResultadosDaSheet({ silencioso=false, notificar=false }={}){
   try {
     const resp = await fetch(SHEET_CSV_URL + '&t=' + Date.now(), { cache:'no-store' });
     if(!resp.ok) return false;
     const text = await resp.text();
     const antes = JSON.stringify(currentResults);
-    const idsAntes = new Set(Object.keys(currentResults));
+    const idsAntes = notificar ? new Set(Object.keys(currentResults)) : null;
     const lines = text.trim().split('\n').slice(1);
     for(const line of lines){
       const cols = line.split(',');
@@ -1792,8 +1792,8 @@ async function fetchResultadosDaSheet({ silencioso=false }={}){
     const depois = JSON.stringify(currentResults);
     const mudou = antes !== depois;
     console.log('[planilha]', new Date().toLocaleTimeString(), 'jogos:', Object.keys(currentResults).length, 'mudou:', mudou);
-    // Notifica participantes sobre resultados novos (não vistos antes nesta sessão)
-    if(mudou && currentBolao){
+    // Notifica participantes sobre resultados novos (só no poll periódico, não no carregamento inicial)
+    if(notificar && mudou && currentBolao && idsAntes){
       for(const id of Object.keys(currentResults)){
         if(!idsAntes.has(id)){
           const { s1, s2 } = currentResults[id];
@@ -1809,7 +1809,7 @@ async function fetchResultadosDaSheet({ silencioso=false }={}){
 let _pollSheet = null;
 async function checarPlanilha(){
   if(!currentBolao) return;
-  const mudou = await fetchResultadosDaSheet({ silencioso:true });
+  const mudou = await fetchResultadosDaSheet({ silencioso:true, notificar:true });
   if(mudou){
     // Recalcula classificações e mata-mata com os dados novos
     for(const g of Object.keys(GROUPS)){
