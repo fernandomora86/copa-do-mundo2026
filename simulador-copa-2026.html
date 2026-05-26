@@ -1193,6 +1193,7 @@ async function entrarNoBolao(bolaoId){
     await fetchResultadosDaSheet();
     escutarResultados();
     iniciarPollSheet();
+    subscribePush();
     renderGroups();
     for(const g of Object.keys(GROUPS)){ updateGroupStandings(g); updateGroupStandingsReal(g); }
     autoRefreshKO();
@@ -1707,12 +1708,75 @@ const playedMatches=new Set();
 
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqx2EfuuNW9YKnnydj8hSHbZI32CY5CxSw5kwf7DSZGzO7RkzVOWjdcBZA7BFq0f-L0ohjEdGSYcjY/pub?output=csv';
 
+// ── WEB PUSH ──────────────────────────────────────────────────────────────────
+const VAPID_PUBLIC_KEY = 'BJbw1xgjCLjQhBLTv_CKpRx7YsZpQYLvm2bVc0pHVGMyt-r08Uwy9YSEUtum_cq0FTn30ySOdI6TYGkqtZgPPU0';
+const NOTIFY_SECRET    = 'copa2026push16157';
+
+function _vapidKey(base64) {
+  const raw = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+function getMatchTeams(id) {
+  const [phase, idxStr] = id.split('-');
+  const idx = parseInt(idxStr, 10);
+  if (GROUPS[phase]) {
+    const pair = genMatches(GROUPS[phase])[idx] || [];
+    return [pair[0] || '?', pair[1] || '?'];
+  }
+  const getters = {
+    r32: () => getR32pairs()[idx] || [],
+    r16: () => getR16pairs()[idx] || [],
+    qf:  () => getQFpairs()[idx]  || [],
+    sf:  () => getSFpairs()[idx]  || [],
+    final: () => getFinalPair()[0] || [],
+  };
+  const pair = getters[phase] ? getters[phase]() : [];
+  return [pair[0] || '?', pair[1] || '?'];
+}
+
+async function subscribePush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!currentUser || !currentBolao || !firebaseEnabled) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _vapidKey(VAPID_PUBLIC_KEY),
+      });
+    }
+    await db.collection('boloes').doc(currentBolao.id)
+      .collection('pushSubscriptions').doc(currentUser.uid)
+      .set({ uid: currentUser.uid, subscription: sub.toJSON(), updatedAt: new Date().toISOString() });
+  } catch (e) { console.warn('[push] subscribe falhou:', e); }
+}
+
+async function notificarResultado(jogoId, s1, s2) {
+  if (!currentBolao) return;
+  const [t1, t2] = getMatchTeams(jogoId);
+  try {
+    await fetch('/api/notify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${NOTIFY_SECRET}`,
+      },
+      body: JSON.stringify({ bolaoId: currentBolao.id, jogoId, s1, s2, t1, t2 }),
+    });
+  } catch (e) { console.warn('[push] notificar falhou:', e); }
+}
+
 async function fetchResultadosDaSheet({ silencioso=false }={}){
   try {
     const resp = await fetch(SHEET_CSV_URL + '&t=' + Date.now(), { cache:'no-store' });
     if(!resp.ok) return false;
     const text = await resp.text();
     const antes = JSON.stringify(currentResults);
+    const idsAntes = new Set(Object.keys(currentResults));
     const lines = text.trim().split('\n').slice(1);
     for(const line of lines){
       const cols = line.split(',');
@@ -1728,6 +1792,15 @@ async function fetchResultadosDaSheet({ silencioso=false }={}){
     const depois = JSON.stringify(currentResults);
     const mudou = antes !== depois;
     console.log('[planilha]', new Date().toLocaleTimeString(), 'jogos:', Object.keys(currentResults).length, 'mudou:', mudou);
+    // Notifica participantes sobre resultados novos (não vistos antes nesta sessão)
+    if(mudou && currentBolao){
+      for(const id of Object.keys(currentResults)){
+        if(!idsAntes.has(id)){
+          const { s1, s2 } = currentResults[id];
+          notificarResultado(id, s1, s2);
+        }
+      }
+    }
     return mudou;
   } catch(e){ console.warn('Erro ao buscar resultados da sheet:', e); return false; }
 }
