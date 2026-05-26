@@ -1756,7 +1756,7 @@ async function clicarNotificacoes() {
         .collection('pushSubscriptions').doc(currentUser.uid).get();
       if (saved.exists) {
         if (btn) { btn.textContent = '🔔'; btn.style.borderColor = '#c9a227'; }
-        alert('✅ Notificações ativadas!\nBolão: ' + currentBolao.id.slice(0,8) + '...\nUID: ' + currentUser.uid.slice(0,8) + '...');
+        alert('✅ Notificações ativadas!\nBolão: ' + currentBolao.id + '\nUID: ' + currentUser.uid);
       } else {
         if (btn) btn.textContent = '🔕';
         alert('⚠️ Assinatura do browser OK, mas falhou ao salvar no Firestore.\nBolão: ' + currentBolao.id + '\nUID: ' + currentUser.uid);
