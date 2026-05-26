@@ -1764,23 +1764,23 @@ async function clicarNotificacoes() {
 }
 
 async function subscribePush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  if (!currentUser || !currentBolao || !firebaseEnabled) return;
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      const perm = await Notification.requestPermission();
-      if (perm !== 'granted') return;
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: _vapidKey(VAPID_PUBLIC_KEY),
-      });
-    }
-    await db.collection('boloes').doc(currentBolao.id)
-      .collection('pushSubscriptions').doc(currentUser.uid)
-      .set({ uid: currentUser.uid, subscription: sub.toJSON(), updatedAt: new Date().toISOString() });
-  } catch (e) { console.warn('[push] subscribe falhou:', e); }
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) throw new Error('Browser não suporta push');
+  if (!firebaseEnabled) throw new Error('Firebase não habilitado');
+  if (!currentUser) throw new Error('Usuário não logado');
+  if (!currentBolao) throw new Error('Sem bolão ativo');
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') throw new Error('Permissão negada');
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _vapidKey(VAPID_PUBLIC_KEY),
+    });
+  }
+  await db.collection('boloes').doc(currentBolao.id)
+    .collection('pushSubscriptions').doc(currentUser.uid)
+    .set({ uid: currentUser.uid, subscription: sub.toJSON(), updatedAt: new Date().toISOString() });
 }
 
 async function notificarTodosResultados() {
