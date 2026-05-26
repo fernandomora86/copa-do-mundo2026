@@ -1755,18 +1755,20 @@ async function subscribePush() {
   } catch (e) { console.warn('[push] subscribe falhou:', e); }
 }
 
-async function notificarResultado(jogoId, s1, s2) {
-  if (!currentBolao) return;
-  const [t1, t2] = getMatchTeams(jogoId);
+async function notificarTodosResultados() {
+  if (!currentBolao || !Object.keys(currentResults).length) return;
+  const resultados = Object.entries(currentResults).map(([jogoId, r]) => {
+    const [t1, t2] = getMatchTeams(jogoId);
+    return { jogoId, s1: r.s1, s2: r.s2, t1, t2 };
+  });
   try {
-    await fetch('/api/notify', {
+    const resp = await fetch('/api/notify', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${NOTIFY_SECRET}`,
-      },
-      body: JSON.stringify({ bolaoId: currentBolao.id, jogoId, s1, s2, t1, t2 }),
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${NOTIFY_SECRET}` },
+      body: JSON.stringify({ bolaoId: currentBolao.id, resultados }),
     });
+    const data = await resp.json();
+    console.log('[push] notify:', data);
   } catch (e) { console.warn('[push] notificar falhou:', e); }
 }
 
@@ -1776,7 +1778,6 @@ async function fetchResultadosDaSheet({ silencioso=false, notificar=false }={}){
     if(!resp.ok) return false;
     const text = await resp.text();
     const antes = JSON.stringify(currentResults);
-    const idsAntes = notificar ? new Set(Object.keys(currentResults)) : null;
     const lines = text.trim().split('\n').slice(1);
     for(const line of lines){
       const cols = line.split(',');
@@ -1792,15 +1793,9 @@ async function fetchResultadosDaSheet({ silencioso=false, notificar=false }={}){
     const depois = JSON.stringify(currentResults);
     const mudou = antes !== depois;
     console.log('[planilha]', new Date().toLocaleTimeString(), 'jogos:', Object.keys(currentResults).length, 'mudou:', mudou);
-    // Notifica participantes sobre resultados novos (só no poll periódico, não no carregamento inicial)
-    if(notificar && mudou && currentBolao && idsAntes){
-      for(const id of Object.keys(currentResults)){
-        if(!idsAntes.has(id)){
-          const { s1, s2 } = currentResults[id];
-          notificarResultado(id, s1, s2);
-        }
-      }
-    }
+    // Quando detecta mudança no poll, envia todos os resultados para a API
+    // O servidor filtra quais já foram notificados via notificacoesSent no Firestore
+    if(notificar && mudou && currentBolao) notificarTodosResultados();
     return mudou;
   } catch(e){ console.warn('Erro ao buscar resultados da sheet:', e); return false; }
 }
