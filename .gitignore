@@ -14,3 +14,6 @@ gen_csv.py
 copa2026-resultados.csv
 _template-novo-projeto/
 taca-BACKUP.png
+.env
+.env.*
+node_modules/

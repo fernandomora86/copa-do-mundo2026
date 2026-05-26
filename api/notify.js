@@ -79,20 +79,36 @@ async function sendPushToUser(bolaoRef, subDoc, jogo) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || '';
+  const allowed = ['https://copa-do-mundo2026-beta.vercel.app', 'http://localhost'];
+  if (allowed.some(o => origin.startsWith(o))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).end();
 
   const authHeader = req.headers.authorization || '';
-  if (authHeader !== `Bearer ${process.env.NOTIFY_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  let decoded;
+  try {
+    decoded = await admin.auth().verifyIdToken(token);
+  } catch (_) {
+    return res.status(401).json({ error: 'Invalid token' });
   }
 
   const { bolaoId, resultados } = req.body || {};
   if (!bolaoId || !Array.isArray(resultados) || !resultados.length) {
     return res.status(400).json({ error: 'Missing fields' });
+  }
+
+  const partDoc = await db.collection('boloes').doc(bolaoId)
+    .collection('participantes').doc(decoded.uid).get();
+  if (!partDoc.exists) {
+    return res.status(403).json({ error: 'Not a participant' });
   }
 
   const bolaoRef = db.collection('boloes').doc(bolaoId);

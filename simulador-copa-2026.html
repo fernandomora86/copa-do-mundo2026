@@ -1736,7 +1736,6 @@ const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqx2Efuu
 
 // ── WEB PUSH ──────────────────────────────────────────────────────────────────
 const VAPID_PUBLIC_KEY = 'BJbw1xgjCLjQhBLTv_CKpRx7YsZpQYLvm2bVc0pHVGMyt-r08Uwy9YSEUtum_cq0FTn30ySOdI6TYGkqtZgPPU0';
-const NOTIFY_SECRET    = 'copa2026notify';
 
 function _vapidKey(base64) {
   const raw = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
@@ -1834,14 +1833,16 @@ async function subscribePush() {
 
 async function notificarTodosResultados() {
   if (!currentBolao || !Object.keys(currentResults).length) return;
+  if (!currentUser) return;
   const resultados = Object.entries(currentResults).map(([jogoId, r]) => {
     const [t1, t2] = getMatchTeams(jogoId);
     return { jogoId, s1: r.s1, s2: r.s2, t1, t2 };
   });
   try {
+    const idToken = await currentUser.getIdToken();
     const resp = await fetch('/api/notify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${NOTIFY_SECRET}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
       body: JSON.stringify({ bolaoId: currentBolao.id, resultados }),
     });
     const data = await resp.json();
